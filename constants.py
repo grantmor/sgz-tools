@@ -75,6 +75,7 @@ class Palettes:
     Blue = 0x00
     Yellow = 0x0c
     Orange = 0x01
+    Green = 0x07
 
 
 # Engine constants

@@ -12,6 +12,7 @@ from stage import *
 # TODO: Energy Resupply Bug
 # TODO: Refactor - Split Map and Stage functionality
 # TODO: Encapsulate and parameterize random terrain generation
+# TODO: Different ground types result in different battle scene...
 
 # TODO: Make energy, time, inventory persistent
 # TODO: Seek and destroy continues
@@ -47,7 +48,7 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
     print(stageInfo)
     eventList = []
 
-    numEvents = 12
+    numEvents = 6
 
     for event in range(0, numEvents):
 
@@ -68,7 +69,7 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
 
 
     # Generating Random Terrain Data
-    noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=5)
+    noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=2)
 
     xTiles, yTiles = engine.TilesInRow * 2, 16
 
@@ -98,19 +99,28 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
             tileValue = bitmap[y][x]
             if tileValue <= stop1:
                 randomMap.append(tiles.DeepSea)
+
             elif stop1 < tileValue <= stop2:
                 randomMap.append(tiles.Sea)
             elif stop2 < tileValue <= stop3:
                 randomMap.append(tiles.Ground)
+
             elif stop3 < tileValue <= stop4:
-                randomMap.append(tiles.Building)
+                if stageInfo.stageNumber == 2 or stageInfo.stageNumber == 3:
+                    randomMap.append(tiles.Mountain)
+                else:
+                    randomMap.append(tiles.Building)
+
             else:
-                randomMap.append(tiles.SkyScraper)
+                if stageInfo.stageNumber == 2 or stageInfo.stageNumber == 3:
+                    randomMap.append(tiles.RockyMountain)
+                else:
+                    randomMap.append(tiles.SkyScraper)
 
     # Generating Enemy List
-    numTanks = 8
-    numMissles = 8
-    numMines = 8
+    numTanks = 2
+    numMissles = 2
+    numMines = 2
 
     enemyList = []
 
@@ -167,7 +177,7 @@ def stage_config(stageNum):
     return stageConfig
     
 # Standard Palettes
-stdPalettes = {
+urbanPalette = {
     tiles.Ground: palettes.Map,
     tiles.Sea: palettes.Blue,
     tiles.DeepSea: palettes.Blue,
@@ -184,15 +194,39 @@ stdPalettes = {
     enemies.Mine: palettes.Enemy
 }
 
-currentMaxStage = 1
-stageRange = range(1, currentMaxStage + 1)
+ruralPalette = {
+    tiles.Ground: palettes.Green,
+    tiles.Sea: palettes.Blue,
+    tiles.DeepSea: palettes.Blue,
 
+    tiles.Mountain: palettes.Green,
+    tiles.RockyMountain: palettes.Green,
+
+    tiles.ResupplyBase: palettes.Blue,
+    tiles.ItemPoint: palettes.Yellow,
+    tiles.AreaPoint: palettes.Orange,
+
+    enemies.Tank: palettes.Enemy,
+    enemies.Missle: palettes.Enemy,
+    enemies.Mine: palettes.Enemy
+}
+
+currentMaxStage = 2
+stageRange = range(1, currentMaxStage + 1)
 
 for stage in stageRange:
     stageInfo = stage_info(stage)
     stageConfig = stage_config(stage)
 
+    # Move this into stage eventually
+    if stage == 2 or stage == 3:
+        stdPalettes = ruralPalette
+    else:
+        stdPalettes = urbanPalette 
+
     eventList, randomMap, enemyList = generate_stage(stageInfo, stageConfig, stdPalettes)
+
+    #print_uncompressed_map_data(randomMap)
 
     stageData = pack_test_map(
         stageInfo, 
