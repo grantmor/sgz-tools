@@ -1,6 +1,8 @@
 from math import floor
 from dataclasses import dataclass
+
 from constants import *
+from game import *
 
 class Event:
     def __init__(self, eventType, payload, col, row): # will need to figureout first, 2ndtolast and last
@@ -33,8 +35,10 @@ class Stage:
 ### Debug stage 2 events
                 self.eventOffset = 0x02afe1
                 self.eventSize = 0x8d
+                
                 self.terrainOffset = 0x0b00f0
                 self.terrainSize = 0x01ba
+                
                 self.enemyOffset = 0x0b3288
                 self.enemySize = 0x036c
 
@@ -65,9 +69,10 @@ class Stage:
             elif stage == 2:
                 self.eventOffset = 0x02b06e
                 self.eventSize = 0x7d
-                #self.terrainOffset = 0x0b02aa
+                
                 self.terrainOffset = 0x0b041a
                 self.terrainSize = 0x0436
+               
                 self.enemyOffset = 0x0b35f4
                 self.enemySize = 0x18e
 
@@ -79,10 +84,9 @@ class Stage:
                 self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
                 self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
-                #self.enemyBasePtrVal = 0xb5f4
                 self.enemyBasePtrVal = 0x35f4
 
-                self.baseEnemyPosRomAdr = 0xd1e2 #1d1e4 snes space#****************
+                self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseStatInitRomAdr = 0xd1c4
                 
                 self.stageTimeOffset = 0x00
@@ -96,8 +100,10 @@ class Stage:
             elif stage == 3:
                 self.eventOffset = 0x02b0ed
                 self.eventSize = 0x0fd
+                
                 self.terrainOffset = 0x0b06e0
                 self.terrainSize = 0x097a
+                
                 self.enemyOffset = 0x0b3782
                 self.enemySize = 0x0716
 
@@ -105,6 +111,10 @@ class Stage:
                 self.mapPtrOffsetB = 0x0b0028
                 
                 self.mapBasePtr = 0x86e0
+                self.enemyBasePtrVal = 0x35f4 # Copied from 2
+
+                self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
+                self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
                 self.playableZones = 6
             elif stage == 4:
@@ -571,8 +581,6 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
     rom.seek(stageInfo.terrainOffset)
     rom.write(stageData.mapData)
 
-# Are we writing the correct values to enemy pointers???
-
     # Write Stage Enemy Region Pointers
     rom.seek(stageInfo.enemyPtrOffsetA)
     rom.write(stageData.enemyPtrA)
@@ -589,41 +597,41 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
     rom.write(stageData.eventData)
 
     # Time
-    #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.stageTimeOffset)
-    #time = int_to_16_le(stageConfig.stageTime)
-    #rom.write(time)
+    rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.stageTimeOffset)
+    time = int_to_16_le(stageConfig.stageTime)
+    rom.write(time)
 
     # Player Position
-    #playerPositionBuffer = bytearray()
-    #playerPositionBuffer += int_to_16_le(stageConfig.playerPosX)
-    #playerPositionBuffer += bytes([stageConfig.playerPosY])
+    playerPositionBuffer = bytearray()
+    playerPositionBuffer += int_to_16_le(stageConfig.playerPosX)
+    playerPositionBuffer += bytes([stageConfig.playerPosY])
 
-    #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset)
-    #rom.write(playerPositionBuffer)
+    rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset)
+    rom.write(playerPositionBuffer)
 
     # Enemy Position
-    #enemyHorizontalPos = int_to_16_le(stageConfig.enemyPosX)
-    #enemyVerticalPos = int_to_16_le(stageConfig.enemyPosY)
+    enemyHorizontalPos = int_to_16_le(stageConfig.enemyPosX)
+    enemyVerticalPos = int_to_16_le(stageConfig.enemyPosY)
 
-    #enemyPositionBuffer = bytearray()
-    #enemyPositionBuffer += enemyHorizontalPos
-    #enemyPositionBuffer += enemyVerticalPos
-    #enemyPositionBuffer += enemyHorizontalPos
-    #enemyPositionBuffer += enemyVerticalPos
-    #enemyPositionBuffer += bytes([0x03]) # Need to debug more to know what the last byte is used for
+    enemyPositionBuffer = bytearray()
+    enemyPositionBuffer += enemyHorizontalPos
+    enemyPositionBuffer += enemyVerticalPos
+    enemyPositionBuffer += enemyHorizontalPos
+    enemyPositionBuffer += enemyVerticalPos
+    enemyPositionBuffer += bytes([0x03]) # Need to debug more to know what the last byte is used for
 
-    #rom.seek(stageInfo.baseEnemyPosRomAdr)
-    #rom.write(enemyPositionBuffer)
+    rom.seek(stageInfo.baseEnemyPosRomAdr)
+    rom.write(enemyPositionBuffer)
 
     # Energy Buffer
-    #energyBuffer = bytes()
-    #energyBuffer += int_to_16_le(stageConfig.playerEnergyStart)
-    #energyBuffer += int_to_16_le(stageConfig.playerEnergyMax)
-    #energyBuffer += int_to_16_le(stageConfig.enemyEnergyStart)
-    #energyBuffer += int_to_16_le(stageConfig.enemyEnergyMax)
+    energyBuffer = bytes()
+    energyBuffer += int_to_16_le(stageConfig.playerEnergyStart)
+    energyBuffer += int_to_16_le(stageConfig.playerEnergyMax)
+    energyBuffer += int_to_16_le(stageConfig.enemyEnergyStart)
+    energyBuffer += int_to_16_le(stageConfig.enemyEnergyMax)
 
     # Player/Enemy Health
-    #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset)
-    #rom.write(energyBuffer)
+    rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset)
+    rom.write(energyBuffer)
 
     rom.close()

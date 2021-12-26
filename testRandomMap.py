@@ -7,16 +7,18 @@ import matplotlib.pyplot as plot
 from constants import *
 from stage import *
 
-# TODO: Accomodate other stages
+from game import *
+
+# TODO: Accomodate stages 3-6
+# TODO: Skip hunting for Professor Ogata?
 # TODO: "Safety Checks" (No spawning trapped, etc.)
 # TODO: Energy Resupply Bug
 # TODO: Refactor - Split Map and Stage functionality
-# TODO: Encapsulate and parameterize random terrain generation
 # TODO: Different ground types result in different battle scene...
 
+# TODO: Figure out a way to initialize time, energy
 # TODO: Make energy, time, inventory persistent
 # TODO: Seek and destroy continues
-# TODO: Enable UFOs on stage 1 (for inventory management?)
 
 # TODO: Fill in water around deep water
 # TODO: Delete "Lonely Cells" (Will help with compression)
@@ -27,28 +29,13 @@ def coord_to_steps(coord):
     return coord * 8
 
 
-# US v1.1 Values
-#stageInfos = [
-#    Stage(1, 'us11')
-    #stage2 = Stage(2, 'us11')
-    #stage3 = Stage(3, 'us11')
-    #stage4 = Stage(4, 'us11')
-    #stage5 = Stage(5, 'us11')
-#]
-
-# Stage 1 so only 4 Zones
-
-
-
-
-
 def generate_stage(stageInfo, stageConfig, stagePalettes):
     # Generate Test Events TODO: Only use traps if the reward is worth the risk... for example FULL heal
 
     print(stageInfo)
     eventList = []
 
-    numEvents = 6
+    numEvents = 10
 
     for event in range(0, numEvents):
 
@@ -66,11 +53,13 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
 
         newEvent = Event(eventType, eventPayload, xPos, yPos)
         eventList.append(newEvent)
+    
 
 
     # Generating Random Terrain Data
-    noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=2)
+    noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=6)
 
+    # Half horizontal resolution
     xTiles, yTiles = engine.TilesInRow * 2, 16
 
     bitmap = []
@@ -79,6 +68,8 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
         row = []
         for y in range(xTiles):
             noiseVal = noise1([x/xTiles, y/yTiles])
+            row.append(noiseVal)
+            # double up x noise
             row.append(noiseVal)
         bitmap.append(row)
 
@@ -117,10 +108,9 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
                 else:
                     randomMap.append(tiles.SkyScraper)
 
-    # Generating Enemy List
-    numTanks = 2
-    numMissles = 2
-    numMines = 2
+    numTanks = 4
+    numMissles = 4
+    numMines = 4
 
     enemyList = []
 
@@ -175,7 +165,10 @@ def stage_config(stageNum):
     )
 
     return stageConfig
-    
+
+# Patch Game
+patch_features(sys.argv[1], True, True, True)
+
 # Standard Palettes
 urbanPalette = {
     tiles.Ground: palettes.Map,
@@ -188,6 +181,8 @@ urbanPalette = {
     tiles.ResupplyBase: palettes.Blue,
     tiles.ItemPoint: palettes.Yellow,
     tiles.AreaPoint: palettes.Orange,
+
+    tiles.Mothership : palettes.UFO,
 
     enemies.Tank: palettes.Enemy,
     enemies.Missle: palettes.Enemy,
@@ -205,6 +200,8 @@ ruralPalette = {
     tiles.ResupplyBase: palettes.Blue,
     tiles.ItemPoint: palettes.Yellow,
     tiles.AreaPoint: palettes.Orange,
+
+    tiles.Mothership: palettes.UFO,
 
     enemies.Tank: palettes.Enemy,
     enemies.Missle: palettes.Enemy,

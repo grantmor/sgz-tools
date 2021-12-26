@@ -2,6 +2,7 @@
 *.sfc
 *.smc
 *.bst
+*.sym
 
 testing.py
 
