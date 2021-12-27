@@ -41,6 +41,7 @@ invincibility = Event(events.Item, items.Invincibility, 26, 27)
 warp = Event(events.Item, items.Warp, 27, 27)
 stopTime = Event(events.Item, items.StopTime, 28, 27)
 messageItem = Event(events.Item, items.Message, 29, 27)
+specialEnergy = Event(events.EnergyResupply, 0x05, 30, 27)
 
 testEvents = [
     energyResupply,
@@ -125,7 +126,9 @@ stageOneConfig = StageConfig(
     999,
 
     700, 700,
-    700, 700
+    700, 700,
+
+    16
 )
 
 stageOneData = pack_test_map(

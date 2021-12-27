@@ -448,7 +448,7 @@ def event_obj_to_tile(event):
     return eventTileMap[event.type]
 
 
-def merge_event_list_map_data(mapData, eventList, palettesPresent, stdPalettes):
+def merge_event_list_map_data(mapData, eventList, insertSpecialEnergy, palettesPresent, stdPalettes):
     tileStride = engine.TilePalettePairLength if palettesPresent else 1 
 
     # Get list of event offsets
@@ -456,16 +456,26 @@ def merge_event_list_map_data(mapData, eventList, palettesPresent, stdPalettes):
     for event in eventList:
         eventPositionMap[coord_to_map_offset(event.col, event.row, palettesPresent)] = event_obj_to_tile(event)
 
+    # Upgrade Resupply Bases to Special Energy
+    if insertSpecialEnergy:
+        specialEnergiesInserted = 0
+
+        for offset, tileType in eventPositionMap.items():
+            if specialEnergiesInserted < 3 and tileType == tiles.ResupplyBase:
+                eventPositionMap[offset] = tiles.SpecialEnergy
+                specialEnergiesInserted += 1
+
     tilePalette = 0x00
     if event.type == events.EnergyResupply:
         tilePalette = palettes.Blue
+
+
     elif event.type == events.Item:
         tilePalette = palettes.Yellow
     elif event.type == events.Trap:
         tilePalette == palettes.Orange
     elif event.type == events.Message:
         tilePalette == palettes.Yellow
-    # TODO: Still need to handle AreaPoint and SE
 
     tileIdx = 0
     while tileIdx < len(mapData):
@@ -514,7 +524,6 @@ def insert_palettes(mapData, stdPalettes):
     for tile in mapData:
         currentTile = tile
         mapDataWithPalettes.append(currentTile)
-
         mapDataWithPalettes.append(stdPalettes[currentTile])
 
     return mapDataWithPalettes
@@ -589,8 +598,14 @@ def pack_test_map(stage, eventInput, mapInput, enemyInput, stdPalettes, palettes
         eventData.append(event.pen)
         eventData.append(event.last)
 
+    # Insert Special Energy in Stage 5
+    if stage.stageNumber == 5:
+        insertSpecialEnergy = True
+    else:
+        insertSpecialEnergy = False
+
     # Merge event data with terrain data    
-    mapEventData = merge_event_list_map_data(mapData, eventInput, palettesPresent, stdPalettes)
+    mapEventData = merge_event_list_map_data(mapData, eventInput, insertSpecialEnergy, palettesPresent, stdPalettes)
 
     # Compress Terrain Data
     bRegionTerrainOffset, compressedMapData = compress_map_data(mapEventData, stdPalettes, True)

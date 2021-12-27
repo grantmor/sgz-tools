@@ -234,7 +234,7 @@ def stage_config(stageNum):
     return stageConfig
 
 # Patch Game
-patch_features(sys.argv[1], True, True, True)
+patch_features(sys.argv[1], False, False, True)
 
 # Standard Palettes
 urbanPalette = {
@@ -252,6 +252,8 @@ urbanPalette = {
     tiles.ResupplyBase: palettes.Blue,
     tiles.ItemPoint: palettes.Yellow,
     tiles.AreaPoint: palettes.Orange,
+
+    tiles.SpecialEnergy: palettes.Blue,
 
     tiles.Mothership : palettes.UFO,
 
@@ -275,6 +277,8 @@ ruralPalette = {
     tiles.ResupplyBase: palettes.Blue,
     tiles.ItemPoint: palettes.Yellow,
     tiles.AreaPoint: palettes.Orange,
+
+    tiles.SpecialEnergy: palettes.Blue,
 
     tiles.Mothership: palettes.UFO,
 
