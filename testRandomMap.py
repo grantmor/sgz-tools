@@ -118,11 +118,14 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
             
             # Ground
             elif stop2 < tileValue <= stop3:
-                randomMap.append(tiles.Ground)
+                if stageInfo.stageNumber in [2, 3]:
+                    randomMap.append(tiles.RuralGround)
+                else:
+                    randomMap.append(tiles.UrbanGround)
 
             # Building / Mountain
             elif stop3 < tileValue:
-                if stageInfo.stageNumber == 2 or stageInfo.stageNumber == 3:
+                if stageInfo.stageNumber in [2,3]:
                     randomMap.append(tiles.Mountain)
                 else:
                     randomMap.append(tiles.Building)
@@ -202,6 +205,10 @@ patch_features(sys.argv[1], True, True, True)
 # Standard Palettes
 urbanPalette = {
     tiles.Ground: palettes.Map,
+
+    tiles.UrbanGround: palettes.Map,
+    tiles.SpecialGround: palettes.Map,
+
     tiles.Sea: palettes.Blue,
     tiles.DeepSea: palettes.Blue,
 
@@ -221,6 +228,10 @@ urbanPalette = {
 
 ruralPalette = {
     tiles.Ground: palettes.Green,
+
+    tiles.RuralGround: palettes.Green,
+    tiles.SpecialGround: palettes.Green,
+
     tiles.Sea: palettes.Blue,
     tiles.DeepSea: palettes.Blue,
 

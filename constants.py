@@ -5,7 +5,11 @@ class Tiles:
     Sea = 0xeb
     DeepSea = 0xec
 
-    Ground = 0xf1 # Could also use FB, F5
+    Ground = 0xf1 # Deprecated, use specific ground types
+    UrbanGround = 0xf1
+    RuralGround = 0xf5
+    SpecialGround = 0xfb
+
     Building = 0xf0
     SkyScraper = 0xf2
     
@@ -70,12 +74,16 @@ class Items:
 
 @dataclass(frozen=True)
 class Palettes:
+    # Deprecated, use Gray or Green instead
     Map = 0x1c
+    
+    Gray = 0x1c
+    Green = 0x07
+
     Enemy = 0x06
     Blue = 0x00
     Yellow = 0x0c
     Orange = 0x01
-    Green = 0x07
     UFO = 0x04
 
 
