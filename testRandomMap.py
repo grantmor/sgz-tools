@@ -11,21 +11,23 @@ from game import *
 from stageMap import *
 
 
-# TODO: Accomodate stages 3-6
+# TODO: Finish movement randomization for all bosses (currently only MG)
 # TODO: Skip hunting for Professor Ogata?
 # TODO: "Safety Checks" (No spawning trapped, etc.)
 # TODO: Energy Resupply Bug
 # TODO: Refactor - Split Map and Stage functionality
-# TODO: Different ground types result in different battle scene...
+# TODO: Power lines
 
 # TODO: Figure out a way to initialize time, energy
 # TODO: Make energy, time, inventory persistent
 # TODO: Seek and destroy continues
 
-# TODO: Fill in water around deep water
-# TODO: Delete "Lonely Cells" (Will help with compression)
+# TODO: Separate water and ground/building noise into passes
+# TODO: Add one large body of water per level 
+# TODO: Voronoi for rural areas, grid pattern for cities
+# TODO: Third pass for "impassables"
 # TODO: Sprinkle in stuff in "Empty Zones"?
-# TODO: Explore layering two perlin textures, normalizing then using similar stopvalues?
+
 
 def coord_to_steps(coord):
     return coord * 8
@@ -35,32 +37,62 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
     # Generate Test Events TODO: Only use traps if the reward is worth the risk... for example FULL heal
 
     if stageInfo.stageNumber in [1,2]:
-        mapParams = MapParameters(2, 8, 6, 8)
-    else:
-        mapParams = MapParameters(2, 16, 12, 12)
+        mapParams = MapParameters(2, 6, 5, 2, 0, 12)
+    elif stageInfo.stageNumber == 3:
+        mapParams = MapParameters(2, 8, 8, 4, 6, 24)
+    else: 
+        mapParams = MapParameters(2, 8, 12, 4, 0, 24)
 
     print(mapParams.horizontalStretchFactor)
 
-    # Handle zones to generate ...
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
+
+    # This is a dumb way to do this, will fix later
+    # Should instead do a pass for each type (items, immediate items, resupply bases, traps, SE)
     eventList = []
 
-    for event in range(0, mapParams.numEvents):
+    for event in range(0, mapParams.numItems + 1):
 
-        eventType = random.randint(events.MinVal, events.MaxVal)
-        while eventType == events.Message or eventType == events.Trap:
-            eventType = random.randint(events.MinVal, events.MaxVal)
-        
-        
-        if eventType == events.EnergyResupply:
-            eventPayload = items.EnergyResupply
+        eventType = events.Item
+        eventPayload = random.randint(items.MinVal, items.MaxVal)
+
+        whitelistedItems = [
+            items.EnergyCapsule, 
+            items.DefenseItem, 
+            items.FightingSpirit, 
+            items.EnergyRefill, 
+            items.SuperRefill, 
+            items.Warp, 
+            items.StopTime, 
+            items.Invincibility
+        ]
+
+        xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
+        yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+
+        newEvent = Event(eventType, eventPayload, xPos, yPos)
+        eventList.append(newEvent)
+
+    for event in range(0, mapParams.numResupplies + 1):
+
+        eventType = events.EnergyResupply
+        eventPayload = items.EnergyResupply
+
+        xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
+        yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+
+        newEvent = Event(eventType, eventPayload, xPos, yPos)
+        eventList.append(newEvent)
+
+    for event in range(0, mapParams.numTraps + 1):
+
+        eventType = events.Trap
+        # The professor is only at one location
+        if event == 0:
+            eventPayload = items.ProfessorRescue
         else:
-            eventPayload = random.randint(items.MinVal, items.MaxVal)
-
-        # A hack to ensure we can complete stage 3, will find a more elegant method later
-        if stageInfo.stageNumber == 3:
-            eventType = events.Trap
+            eventPayload = 0x01
 
         xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
         yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
@@ -79,6 +111,7 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
     #    print(f'event.row:{event.row}')
 
     # Generating Random Terrain Data
+
     noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=mapParams.noiseFrequency)
 
     bitmap = []

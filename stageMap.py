@@ -4,5 +4,7 @@ from dataclasses import dataclass
 class MapParameters:
     horizontalStretchFactor: int
     noiseFrequency: int
-    numEvents: int
+    numItems: int
+    numResupplies: int
+    numTraps: int
     numEnemies: int
