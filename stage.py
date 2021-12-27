@@ -32,7 +32,6 @@ class Stage:
         if version == 'us11':
             if stage == 1:
 
-### Debug stage 2 events
                 self.eventOffset = 0x02afe1
                 self.eventSize = 0x8d
                 
@@ -84,7 +83,8 @@ class Stage:
                 self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
                 self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
-                self.enemyBasePtrVal = 0x35f4
+                self.enemyBasePtrVal = 0xb5f4
+                #self.enemyBasePtrVal = 0x35f4
 
                 self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseStatInitRomAdr = 0xd1c4
@@ -104,24 +104,41 @@ class Stage:
                 self.terrainOffset = 0x0b06e0
                 self.terrainSize = 0x097a
                 
-                self.enemyOffset = 0x0b3782
+                #self.enemyOffset = 0x0b3782 #3916
+                self.enemyOffset = 0x0b3916 #3916
                 self.enemySize = 0x0716
 
                 self.mapPtrOffsetA = 0x0b0020
                 self.mapPtrOffsetB = 0x0b0028
                 
                 self.mapBasePtr = 0x86e0
-                self.enemyBasePtrVal = 0x35f4 # Copied from 2
+                self.enemyBasePtrVal = 0xb916 
 
                 self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
                 self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
+                # Skipping time, stat init for now...
+                ## ALL COPIED FROM STAGE 2 FOR NOW
+                # Try copying from 1 instead, stage 2 might be weird
+
+                self.baseEnemyPosRomAdr = 0xd1e2 
+                self.baseStatInitRomAdr = 0xd1c4
+                
+                self.stageTimeOffset = 0x00
+                self.startEnergyOffset = 0x26
+
+                self.horizontalPosOffset = 0x0c
+                self.verticalPosOffset = 0x0e
+
                 self.playableZones = 6
+
             elif stage == 4:
                 self.eventOffset = 0x02b1ea
                 self.eventSize = 0x012e
+
                 self.terrainOffset = 0x0b0c24
                 self.terrainSize = 0x04cc
+
                 self.enemyOffset = 0x0b3e98
                 self.enemySize = 0x0536
                 
@@ -129,6 +146,21 @@ class Stage:
                 self.mapPtrOffsetB = 0x0b0038
                 
                 self.mapBasePtr = 0x8c24
+
+                # COPIED FROM 1 OR 2
+                self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
+                self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
+
+                self.enemyBasePtrVal = 0xbe98
+
+                self.baseEnemyPosRomAdr = 0xd1e2 
+                self.baseStatInitRomAdr = 0xd1c4
+                
+                self.stageTimeOffset = 0x00
+                self.startEnergyOffset = 0x26
+
+                self.horizontalPosOffset = 0x0c
+                self.verticalPosOffset = 0x0e
 
                 self.playableZones = 8
             elif stage == 5:
@@ -143,6 +175,21 @@ class Stage:
                 self.mapPtrOffsetB = 0x0b0048
                 
                 self.mapBasePtr = 0x90f0
+
+                # COPIED FROM 1 OR 2
+                self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
+                self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
+
+                self.enemyBasePtrVal = 0xc3ce
+
+                self.baseEnemyPosRomAdr = 0xd1e2 
+                self.baseStatInitRomAdr = 0xd1c4
+                
+                self.stageTimeOffset = 0x00
+                self.startEnergyOffset = 0x26
+
+                self.horizontalPosOffset = 0x0c
+                self.verticalPosOffset = 0x0e
 
                 self.playableZones = 8
         elif version == 'j11':
@@ -327,8 +374,12 @@ def tile_type_sequence(mapRow, stdPalettes, palettePresent):
 def compress_map_data(mapData, stdPalettes, palettePresent):
     compressedMapData = bytes()
 
+    #print('*** cmd ***')
     tileStride = engine.TilePalettePairLength if palettePresent else 1
     numRows = int(len(mapData) / tileStride / engine.TilesInRow)
+
+    #print(f'numRows: {numRows}')
+    #print(f'len mapdata: {len(mapData)}')
 
     #print(f'compress_map_data() numRows: {numRows}')
 
@@ -365,17 +416,24 @@ def compress_map_data(mapData, stdPalettes, palettePresent):
             bRegionOffset = len(compressedMapData)
             #print(f'bRegionOffset:{bRegionOffset}')
             #print(f'halfwayRow:{rowIdx}')
+            #print()
 
     return bRegionOffset, compressedMapData
 
 
 # Zones are populated starting with the A region (west), folowed by the B Region (east)
 def coord_to_map_offset(col, row, palettePresent):
+
+    #print()
+    #print(f'coord_to_map_offset')
+
     tileStride = engine.TilePalettePairLength if palettePresent else 1
     tilesInMap = engine.MaxZones * engine.RowsPerZone * engine.TilesInRow
     # Need to subtract one row worth of tiles because of zero-based indexing
     regionModifier = int(tilesInMap / 2 - engine.TilesInRow) if col >= engine.TilesInRow else 0
     offset = (row * engine.TilesInRow  + col + regionModifier) * tileStride
+
+    #print(f'col: {col}, row: {row}, offset: {offset}')    
     return offset 
 
 
@@ -487,7 +545,12 @@ def pad_map(mapData, padTile):
         numPadTiles = maxMapTiles - mapTiles
         for tile in range(0, numPadTiles):
             paddedMap.append(padTile)
-        
+    #print()
+    #print('pad_map:')
+    #print(f'len map: {len(mapData)}')
+    #print(f'len padded map: {len(paddedMap)}')
+    #print()
+
     return paddedMap + mapData
 
 
@@ -540,9 +603,15 @@ def pack_test_map(stage, eventInput, mapInput, enemyInput, stdPalettes, palettes
     aRegionPointer = stage.mapBasePtr
     bRegionPointer = aRegionPointer + bRegionTerrainOffset
 
+    #print(f'aRegionPointer: {aRegionPointer}')
+    #print(f'bRegionPointer: {bRegionPointer}')
+
     # Compute pointers to enemy data
     aRegionEnemyPointer = stage.enemyBasePtrVal
     bRegionEnemyPointer = aRegionEnemyPointer + bRegionEnemyOffset
+
+    print(f'aRegionEnemyPointer: {aRegionEnemyPointer}')
+    print(f'bRegionEnemyPointer: {bRegionEnemyPointer}')
 
     data = StageData(
         eventData, 
