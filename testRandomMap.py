@@ -34,71 +34,72 @@ def coord_to_steps(coord):
 
 
 def generate_stage(stageInfo, stageConfig, stagePalettes):
-    # Generate Test Events TODO: Only use traps if the reward is worth the risk... for example FULL heal
-
     if stageInfo.stageNumber in [1,2]:
-        mapParams = MapParameters(2, 6, 5, 2, 0, 12)
+        mapParams = MapParameters(2, 6, 3, 2, 0, 12)
     elif stageInfo.stageNumber == 3:
         mapParams = MapParameters(2, 8, 8, 4, 6, 24)
     else: 
-        mapParams = MapParameters(2, 8, 12, 4, 0, 24)
+        mapParams = MapParameters(2, 8, 12, 6, 0, 24)
 
     print(mapParams.horizontalStretchFactor)
 
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
-
-    # This is a dumb way to do this, will fix later
-    # Should instead do a pass for each type (items, immediate items, resupply bases, traps, SE)
     eventList = []
 
-    for event in range(0, mapParams.numItems + 1):
+    if mapParams.numItems > 0:
+        for event in range(0, mapParams.numItems + 1):
 
-        eventType = events.Item
-        eventPayload = random.randint(items.MinVal, items.MaxVal)
+            eventType = events.Item
+            eventPayload = random.randint(items.MinVal, items.MaxVal)
 
-        whitelistedItems = [
-            items.EnergyCapsule, 
-            items.DefenseItem, 
-            items.FightingSpirit, 
-            items.EnergyRefill, 
-            items.SuperRefill, 
-            items.Warp, 
-            items.StopTime, 
-            items.Invincibility
-        ]
+            whitelistedItems = [
+                items.EnergyCapsule, 
+                items.DefenseItem, 
+                items.FightingSpirit, 
+                items.EnergyRefill, 
+                items.SuperRefill, 
+                items.Warp, 
+                items.StopTime, 
+                items.Invincibility
+            ]
 
-        xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-        yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+            xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
+            yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
-        newEvent = Event(eventType, eventPayload, xPos, yPos)
-        eventList.append(newEvent)
+            itemPoint = Event(eventType, eventPayload, xPos, yPos)
+            eventList.append(itemPoint)
 
-    for event in range(0, mapParams.numResupplies + 1):
+    if mapParams.numResupplies > 0:
 
-        eventType = events.EnergyResupply
-        eventPayload = items.EnergyResupply
+        resuppliesAddded = 0
+        for event in range(0, mapParams.numResupplies + 1):
 
-        xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-        yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+            eventType = events.EnergyResupply
+            eventPayload = resuppliesAddded
+            resuppliesAddded += 1
 
-        newEvent = Event(eventType, eventPayload, xPos, yPos)
-        eventList.append(newEvent)
+            xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
+            yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
-    for event in range(0, mapParams.numTraps + 1):
+            resupplyPoint = Event(eventType, eventPayload, xPos, yPos)
+            eventList.append(resupplyPoint)
 
-        eventType = events.Trap
-        # The professor is only at one location
-        if event == 0:
-            eventPayload = items.ProfessorRescue
-        else:
-            eventPayload = 0x01
+    if mapParams.numTraps > 0:
+        for event in range(0, mapParams.numTraps + 1):
 
-        xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-        yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+            eventType = events.Trap
+            # The professor is only at one location
+            if event == 0:
+                eventPayload = items.ProfessorRescue
+            else:
+                eventPayload = 0x01
 
-        newEvent = Event(eventType, eventPayload, xPos, yPos)
-        eventList.append(newEvent)
+            xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
+            yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+
+            trapEvent = Event(eventType, eventPayload, xPos, yPos)
+            eventList.append(trapEvent)
 
     # Log Events
     #print()
