@@ -8,6 +8,8 @@ from constants import *
 from stage import *
 
 from game import *
+from stageMap import *
+
 
 # TODO: Accomodate stages 3-6
 # TODO: Skip hunting for Professor Ogata?
@@ -32,24 +34,23 @@ def coord_to_steps(coord):
 def generate_stage(stageInfo, stageConfig, stagePalettes):
     # Generate Test Events TODO: Only use traps if the reward is worth the risk... for example FULL heal
 
-    #print(stageInfo)
-    # Half horizontal resolution
+    if stageInfo.stageNumber in [1,2]:
+        mapParams = MapParameters(2, 8, 6, 8)
+    else:
+        mapParams = MapParameters(2, 16, 12, 12)
 
+    print(mapParams.horizontalStretchFactor)
 
     # Handle zones to generate ...
-    print(f'*** TERRAIN GEN ***')
-    print(f'pzs: {stageInfo.playableZones}')
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
     eventList = []
 
-    numEvents = 12  
-
-    for event in range(0, numEvents):
+    for event in range(0, mapParams.numEvents):
 
         eventType = random.randint(events.MinVal, events.MaxVal)
-        #while eventType == events.Message or eventType == events.Trap:
-        #    eventType = random.randint(events.MinVal, events.MaxVal)
+        while eventType == events.Message or eventType == events.Trap:
+            eventType = random.randint(events.MinVal, events.MaxVal)
         
         
         if eventType == events.EnergyResupply:
@@ -57,12 +58,11 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
         else:
             eventPayload = random.randint(items.MinVal, items.MaxVal)
 
-        # Hack for now...
+        # A hack to ensure we can complete stage 3, will find a more elegant method later
         if stageInfo.stageNumber == 3:
             eventType = events.Trap
 
         xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-        #xPos = random.randint(0, (engine.TilesInRow * engine.RegionsInZone // 2) - 1)
         yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
         newEvent = Event(eventType, eventPayload, xPos, yPos)
@@ -79,8 +79,7 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
     #    print(f'event.row:{event.row}')
 
     # Generating Random Terrain Data
-    noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=4)
-
+    noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=mapParams.noiseFrequency)
 
     bitmap = []
 
@@ -88,9 +87,10 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
         row = []
         for y in range(xTiles):
             noiseVal = noise1([x/xTiles, y/yTiles])
-            row.append(noiseVal)
-            # double up x noise
-            row.append(noiseVal)
+
+            # Longer lines of the same tile on horizontal lines compresses better
+            for stretch in range(0, mapParams.horizontalStretchFactor):
+                row.append(noiseVal)
         bitmap.append(row)
 
     #plot.imshow(bitmap, cmap='gray')
@@ -135,9 +135,9 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
     
     print(f'len gen map: {len(randomMap)}')
 
-    numTanks = 2
-    numMissles = 2
-    numMines = 2
+    numTanks = mapParams.numEnemies // 3
+    numMissles = mapParams.numEnemies // 3
+    numMines = mapParams.numEnemies // 3
 
     enemyList = []
 
@@ -197,7 +197,7 @@ def stage_config(stageNum):
     return stageConfig
 
 # Patch Game
-patch_features(sys.argv[1], False, False, True)
+patch_features(sys.argv[1], True, True, True)
 
 # Standard Palettes
 urbanPalette = {
