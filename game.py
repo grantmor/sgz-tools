@@ -1,6 +1,14 @@
 from dataclasses import dataclass
 
 @dataclass(frozen=True)
+class RandomizerFlags:
+    PersistentEnergy: bool
+    PersistentTime: bool
+    NoEnemySpawnCritical: bool
+    NoEnemySpawnEvent: bool
+    NoMechaGodzillaWarp: bool
+
+@dataclass(frozen=True)
 class Game:
     PersistentTimePatchRomAdr: int = 0x00d05d
     PersistentEnergyPatchRomAdr: int = 0x00d0b3
@@ -29,7 +37,6 @@ class Game:
     ])
 
 game = Game()
-
 
 def patch_features(romPath, pTime, pEnergy, noWarp):
     rom = open(romPath, 'r+b')

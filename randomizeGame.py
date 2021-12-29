@@ -12,9 +12,6 @@ from stageMap import *
 
 
 # TODO: Finish movement randomization for all bosses (currently only MG)
-# TODO: Skip hunting for Professor Ogata?
-# TODO: "Safety Checks" (No spawning trapped, etc.)
-# TODO: Energy Resupply Bug
 # TODO: Refactor - Split Map and Stage functionality
 # TODO: Power lines
 
@@ -22,26 +19,89 @@ from stageMap import *
 # TODO: Make energy, time, inventory persistent
 # TODO: Seek and destroy continues
 
-# TODO: Separate water and ground/building noise into passes
-# TODO: Add one large body of water per level 
 # TODO: Voronoi for rural areas, grid pattern for cities
 # TODO: Third pass for "impassables"
 # TODO: Sprinkle in stuff in "Empty Zones"?
+
+# TODO: MVP
+# 1) Prevent enemies spawning on critical tiles (optional switch) impl randomizer options dataclass
+#   - Some tiles appear to be placed by the engine... need to make sure not to place tiles there    
+# 2) Finish Persistent health/time 
+# 3) Randomize Player / Enemy location for all maps
+# DONE?) Prevent spawning on umovable tiles 
+# 5) Basic unmovable obstacles / mine lines / electric lines
+# 6) Patch warp to be random (every time or per stage)
+# 7) Refactor to handle verification of level size
+# 8) Randomize Super Lab?
+
+
+def stage_info(stageNum):
+    return Stage(stageNum, 'us11')
+
+
+def stage_config(stageNum, inaccessibleTiles, maxCoordY):
+
+    while True:
+        playerX = random.randint(0, coord_to_steps(39)) 
+        playerY = random.randint(coord_to_steps(maxCoordY), coord_to_steps(31))
+
+        if coord_to_map_offset(playerX, playerY, False) not in inaccessibleTiles: break
+
+    while True:
+        enemyX = random.randint(0, coord_to_steps(39)) 
+        enemyY = random.randint(coord_to_steps(maxCoordY), coord_to_steps(31))
+
+        if coord_to_map_offset(enemyX, enemyY, False) not in inaccessibleTiles: break
+
+    stageConfig = StageConfig(
+
+        playerX,
+        playerY,
+
+        enemyX,
+        enemyY,
+
+        999,
+
+        600, 600,
+        600, 600,
+    )
+
+    return stageConfig
 
 
 def coord_to_steps(coord):
     return coord * 8
 
 
-def generate_stage(stageInfo, stageConfig, stagePalettes):
-    if stageInfo.stageNumber in [1,2]:
-        mapParams = MapParameters(2, 6, 3, 2, 0, 12)
-    elif stageInfo.stageNumber == 3:
-        mapParams = MapParameters(2, 8, 8, 4, 6, 24)
-    else: 
-        mapParams = MapParameters(2, 8, 12, 6, 0, 24)
+def generate_stage(stageInfo, randomizerFlags, stagePalettes):
 
-    print(mapParams.horizontalStretchFactor)
+    if stageInfo.stageNumber < 3:
+        numZonesInStage = 4
+    elif stageInfo.stageNumber == 3:
+        numZonesInStage = 6
+    else:
+        numZonesInStage = 8
+
+    playableRows = stageInfo.playableZones // engine.RegionsInZone * engine.RowsPerZone
+    maxRowsInStage = engine.MaxZones // 2 * engine.RowsPerZone
+    maxCoordY = maxRowsInStage - playableRows
+
+    # Tiles that shouldn't be overwritten by enemies
+    stageSixLabOffset = 555
+    criticalTiles = []
+
+    # NEED TO CHECK THERE BEFORE WRITING EVENTS TOO
+    if stageInfo.stageNumber in [5,6] and randomizerFlags.NoEnemySpawnCritical:
+        criticalTiles.append(stageSixLabOffset) # Super Energy Lab for Stage 6
+
+
+    if stageInfo.stageNumber in [1,2]:
+        mapParams = MapParameters(2, 6, 4, 2, 0, 12)
+    elif stageInfo.stageNumber == 3:
+        mapParams = MapParameters(2, 10, 8, 3, 6, 16)
+    else: 
+        mapParams = MapParameters(2, 12, 10, 4, 0, 16)
 
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
@@ -65,10 +125,13 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
             ]
 
             xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-            yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+            yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
             itemPoint = Event(eventType, eventPayload, xPos, yPos)
             eventList.append(itemPoint)
+
+            # Add events to critical tiles list
+            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
 
     if mapParams.numResupplies > 0:
 
@@ -80,10 +143,15 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
             resuppliesAddded += 1
 
             xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-            yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+            yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
             resupplyPoint = Event(eventType, eventPayload, xPos, yPos)
             eventList.append(resupplyPoint)
+
+            # Add events to critical tiles list
+            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
+
+    print(criticalTiles)
 
     if mapParams.numTraps > 0:
         for event in range(0, mapParams.numTraps + 1):
@@ -96,10 +164,13 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
                 eventPayload = 0x01
 
             xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-            yPos = random.randint(stageConfig.maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+            yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
             trapEvent = Event(eventType, eventPayload, xPos, yPos)
             eventList.append(trapEvent)
+
+            # Add events to critical tiles list
+            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
 
     # Log Events
     #print()
@@ -111,8 +182,8 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
     #    print(f'event.col:{event.col}')
     #    print(f'event.row:{event.row}')
 
-    # Generating Random Terrain Data
 
+    # Generating Random Terrain Data
     noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=mapParams.noiseFrequency)
 
     bitmap = []
@@ -134,9 +205,14 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
 
     tileIdx = 0
 
+    #stop1 = -.23
+    #stop2 = -.1
+    #stop3 = .1
+    #stop4 = .3
+
     stop1 = -.23
     stop2 = -.1
-    stop3 = .1
+    stop3 = .08
     stop4 = .3
 
     for y in range(0, yTiles):
@@ -158,83 +234,78 @@ def generate_stage(stageInfo, stageConfig, stagePalettes):
                     randomMap.append(tiles.UrbanGround)
 
             # Building / Mountain
-            elif stop3 < tileValue:
+            elif stop3 < tileValue <= stop4:
                 if stageInfo.stageNumber in [2,3]:
                     randomMap.append(tiles.Mountain)
                 else:
                     randomMap.append(tiles.Building)
 
-            #else:
-                #if stageInfo.stageNumber == 2 or stageInfo.stageNumber == 3:
-                #    randomMap.append(tiles.RockyMountain)
-                #else:
-                #    randomMap.append(tiles.SkyScraper)
-    
-    print(f'len gen map: {len(randomMap)}')
+            else:
+                if stageInfo.stageNumber == 2 or stageInfo.stageNumber == 3:
+                    randomMap.append(tiles.RockyMountain)
+                else:
+                    randomMap.append(tiles.SkyScraper)
+    ### TODO: - Place more "obstacles" (skyscraper, rocky mountain, electric fence)
 
-    numTanks = mapParams.numEnemies // 3
-    numMissles = mapParams.numEnemies // 3
-    numMines = mapParams.numEnemies // 3
+    # Tiles that can't be moved through (player or boss shouldn't spawn here)
+    inaccessibleTiles = []
+
+    # Find inaccessible tiles
+    for tileIdx, tile in enumerate(randomMap):
+        if tile in [tiles.SkyScraper, tiles.RockyMountain]:
+            inaccessibleTiles.append(tileIdx)
+
+    print(f'inaccesibleTiles:{inaccessibleTiles}')
+    ####################################################################
+    # Placing enemies - do this more efficiently later -
+    # Generate list of required positions first, then assign positions
+    # Change critical tile list to a map?
+    
+    enemyTypes = [
+        enemies.Tank,
+        enemies.Missle,
+        enemies.Mine
+    ]
 
     enemyList = []
 
-    for tank in range(0, numTanks):
-        xPos = random.randint(0, engine.TilesInRow * 2)
-        yPos = random.randint(stageConfig.maxCoordY, 31)
-        enemyList.append(EnemyUnit(enemies.Tank, xPos, yPos))
+    for enemyType in enemyTypes:
+        for enemy in range(0, mapParams.numEnemies // len(enemyTypes)):
+            while True:
+                xPos = random.randint(0, engine.TilesInRow * 2)
+                yPos = random.randint(maxCoordY, 31)
 
-    for missle in range(0, numMissles):
-        xPos = random.randint(0, engine.TilesInRow * 2)
-        yPos = random.randint(stageConfig.maxCoordY, 31)
-        enemyList.append(EnemyUnit(enemies.Missle, xPos, yPos))
+                if not randomizerFlags.NoEnemySpawnEvent: break
+                
+                if coord_to_map_offset(xPos, yPos, False) not in criticalTiles:
+                    break
 
-    for mine in range(0, numTanks):
-        xPos = random.randint(0, engine.TilesInRow * 2)
-        yPos = random.randint(stageConfig.maxCoordY, 31)
-        enemyList.append(EnemyUnit(enemies.Mine, xPos, yPos))
+            enemyList.append(EnemyUnit(enemyType, xPos, yPos))
+    
+    # Log enemy offsets
+    #for enemy in enemyList:
+    #    print(coord_to_map_offset(enemy.col, enemy.row, False))
 
-    return eventList, randomMap, enemyList
+    stageConfig = stage_config(stageInfo.stageNumber, inaccessibleTiles, maxCoordY)
+
+    return eventList, randomMap, enemyList, stageConfig
 
 
-def stage_info(stageNum):
-    return Stage(stageNum, 'us11')
 
+######################
+# *** Randomize! *** #
+######################
 
-def stage_config(stageNum):
-
-    if stageNum < 3:
-        numZonesInStage = 4
-    elif stageNum == 3:
-        numZonesInStage = 6
-    else:
-        numZonesInStage = 8
-
-    print(f'STAGENUM: {stageNum}, numZonesInStage: {numZonesInStage}')
-
-    playableRows = stageInfo.playableZones // engine.RegionsInZone * engine.RowsPerZone
-    maxRowsInStage = engine.MaxZones // 2 * engine.RowsPerZone
-    maxCoordY = maxRowsInStage - playableRows
-
-    stageConfig = StageConfig(
-
-        random.randint(0, coord_to_steps(39)), 
-        random.randint(coord_to_steps(maxCoordY), coord_to_steps(31)),
-
-        random.randint(0, coord_to_steps(39)), 
-        random.randint(coord_to_steps(maxCoordY), coord_to_steps(31)),
-
-        999,
-
-        700, 700,
-        700, 700,
-
-        maxCoordY
-    )
-
-    return stageConfig
+# Randomizer Flags (arguments later)
+randomizerFlags = RandomizerFlags(False, False, True, True, True)
 
 # Patch Game
-patch_features(sys.argv[1], False, False, True)
+patch_features(
+    sys.argv[1],
+    randomizerFlags.PersistentTime,
+    randomizerFlags.PersistentEnergy,
+    randomizerFlags.NoMechaGodzillaWarp
+)
 
 # Standard Palettes
 urbanPalette = {
@@ -292,7 +363,6 @@ stageRange = range(1, numStages + 1)
 
 for stage in stageRange:
     stageInfo = stage_info(stage)
-    stageConfig = stage_config(stage)
 
     # Move this into stage eventually
     if stage == 2 or stage == 3:
@@ -300,7 +370,9 @@ for stage in stageRange:
     else:
         stdPalettes = urbanPalette 
 
-    eventList, randomMap, enemyList = generate_stage(stageInfo, stageConfig, stdPalettes)
+    eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, stdPalettes)
+
+
 
     #print_uncompressed_map_data(randomMap)
 

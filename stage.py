@@ -214,8 +214,6 @@ class StageConfig:
     enemyEnergyStart: int
     enemyEnergyMax: int
 
-    maxCoordY: int
-
 @dataclass(frozen=True)
 class StageData:
     eventData: list
@@ -515,12 +513,6 @@ def pack_map(self, events, map, enemies):
 def insert_palettes(mapData, stdPalettes):
     mapDataWithPalettes = bytearray()
     
-    #byteIdx = 0
-    #while byteIdx < len(mapData):
-    #    currentTile = mapData[byteIdx]
-    #    mapDataWithPalettes.append(currentTile)
-    #    mapDataWithPalettes.append(stdPalettes[currentTile])
-    #    byteIdx += 1
     for tile in mapData:
         currentTile = tile
         mapDataWithPalettes.append(currentTile)
@@ -625,8 +617,8 @@ def pack_test_map(stage, eventInput, mapInput, enemyInput, stdPalettes, palettes
     aRegionEnemyPointer = stage.enemyBasePtrVal
     bRegionEnemyPointer = aRegionEnemyPointer + bRegionEnemyOffset
 
-    print(f'aRegionEnemyPointer: {aRegionEnemyPointer}')
-    print(f'bRegionEnemyPointer: {bRegionEnemyPointer}')
+    #print(f'aRegionEnemyPointer: {aRegionEnemyPointer}')
+    #print(f'bRegionEnemyPointer: {bRegionEnemyPointer}')
 
     data = StageData(
         eventData, 
