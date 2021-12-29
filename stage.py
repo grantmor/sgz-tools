@@ -86,7 +86,7 @@ class Stage:
                 self.enemyBasePtrVal = 0xb5f4
                 #self.enemyBasePtrVal = 0x35f4
 
-                self.baseEnemyPosRomAdr = 0xd1e2 
+                self.baseEnemyPosRomAdr = 0xceb3  
                 self.baseStatInitRomAdr = 0xd1c4
                 
                 self.stageTimeOffset = 0x00
@@ -121,7 +121,8 @@ class Stage:
                 ## ALL COPIED FROM STAGE 2 FOR NOW
                 # Try copying from 1 instead, stage 2 might be weird
 
-                self.baseEnemyPosRomAdr = 0xd1e2 
+                #self.baseEnemyPosRomAdr = 0xd1e2 
+                self.baseEnemyPosRomAdr = 0xd216 
                 self.baseStatInitRomAdr = 0xd1c4
                 
                 self.stageTimeOffset = 0x00
@@ -153,7 +154,8 @@ class Stage:
 
                 self.enemyBasePtrVal = 0xbe98
 
-                self.baseEnemyPosRomAdr = 0xd1e2 
+                #self.baseEnemyPosRomAdr = 0xd1e2 
+                self.baseEnemyPosRomAdr = 0xd248  # Only Battra 1
                 self.baseStatInitRomAdr = 0xd1c4
                 
                 self.stageTimeOffset = 0x00
@@ -182,7 +184,8 @@ class Stage:
 
                 self.enemyBasePtrVal = 0xc3ce
 
-                self.baseEnemyPosRomAdr = 0xd1e2 
+                #self.baseEnemyPosRomAdr = 0xd1e2 
+                self.baseEnemyPosRomAdr = 0xd27a 
                 self.baseStatInitRomAdr = 0xd1c4
                 
                 self.stageTimeOffset = 0x00
@@ -686,18 +689,40 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
     rom.write(playerPositionBuffer)
 
     # Enemy Position
+
     enemyHorizontalPos = int_to_16_le(stageConfig.enemyPosX)
     enemyVerticalPos = int_to_16_le(stageConfig.enemyPosY)
 
-    enemyPositionBuffer = bytearray()
-    enemyPositionBuffer += enemyHorizontalPos
-    enemyPositionBuffer += enemyVerticalPos
-    enemyPositionBuffer += enemyHorizontalPos
-    enemyPositionBuffer += enemyVerticalPos
-    enemyPositionBuffer += bytes([0x03]) # Need to debug more to know what the last byte is used for
+    if stageInfo.stageNumber == 1:
+        # King Ghidorah's position x and y components randomly selected from two addresses each
+        enemyPositionBuffer = bytearray()
+        enemyPositionBuffer += enemyHorizontalPos
+        enemyPositionBuffer += enemyVerticalPos
+        enemyPositionBuffer += enemyHorizontalPos
+        enemyPositionBuffer += enemyVerticalPos
+        enemyPositionBuffer += bytes([0x03]) # Need to debug more to know what the last byte is used for
 
-    rom.seek(stageInfo.baseEnemyPosRomAdr)
-    rom.write(enemyPositionBuffer)
+        rom.seek(stageInfo.baseEnemyPosRomAdr)
+        rom.write(enemyPositionBuffer)
+    elif stageInfo.stageNumber == 4:
+
+        enemyPositionBuffer = bytearray()
+        enemyPositionBuffer += enemyHorizontalPos
+        enemyPositionBuffer += enemyVerticalPos
+
+        rom.seek(stageInfo.baseEnemyPosRomAdr)
+        rom.write(enemyPositionBuffer)
+
+        # TODO: Handle Battra 2... hard coded into instructions @~01e03f
+        enemyHorizontalPos = int_to_16_le(stageConfig.enemyPosX)
+        enemyVerticalPos = int_to_16_le(stageConfig.enemyPosY)
+    else:
+        enemyPositionBuffer = bytearray()
+        enemyPositionBuffer += enemyHorizontalPos
+        enemyPositionBuffer += enemyVerticalPos
+
+        rom.seek(stageInfo.baseEnemyPosRomAdr)
+        rom.write(enemyPositionBuffer)
 
     # Energy Buffer
     energyBuffer = bytes()

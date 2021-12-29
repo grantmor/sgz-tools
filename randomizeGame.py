@@ -169,8 +169,7 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
             # Add events to critical tiles list
             criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
 
-    print(criticalTiles)
-
+    #print(criticalTiles)
 
     # Log Events
     #print()
@@ -255,7 +254,7 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
         if tile in [tiles.SkyScraper, tiles.RockyMountain]:
             inaccessibleTiles.append(tileIdx)
 
-    print(f'inaccesibleTiles:{inaccessibleTiles}')
+    #print(f'inaccesibleTiles:{inaccessibleTiles}')
     ####################################################################
     # Placing enemies - do this more efficiently later -
     # Generate list of required positions first, then assign positions
