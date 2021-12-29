@@ -53,8 +53,6 @@ class Events:
 
 @dataclass(frozen=True)
 class Items:
-    ProfessorRescue = 0x00
-
     FightingSpirit = 0x00
     DefenseItem = 0x01
     EnergyRefill = 0x03

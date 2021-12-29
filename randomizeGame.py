@@ -107,6 +107,24 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
 
     eventList = []
 
+    
+    if mapParams.numTraps > 0:
+        trapIndex = 0
+        for event in range(0, mapParams.numTraps + 1):
+
+            eventType = events.Trap
+            eventPayload = trapIndex 
+            trapIndex += 1
+
+            xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
+            yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+
+            trapEvent = Event(eventType, eventPayload, xPos, yPos)
+            eventList.append(trapEvent)
+
+            # Add events to critical tiles list
+            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
+
     if mapParams.numItems > 0:
         for event in range(0, mapParams.numItems + 1):
 
@@ -153,24 +171,6 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
 
     print(criticalTiles)
 
-    if mapParams.numTraps > 0:
-        for event in range(0, mapParams.numTraps + 1):
-
-            eventType = events.Trap
-            # The professor is only at one location
-            if event == 0:
-                eventPayload = items.ProfessorRescue
-            else:
-                eventPayload = 0x01
-
-            xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-            yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
-
-            trapEvent = Event(eventType, eventPayload, xPos, yPos)
-            eventList.append(trapEvent)
-
-            # Add events to critical tiles list
-            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
 
     # Log Events
     #print()
