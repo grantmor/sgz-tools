@@ -396,16 +396,25 @@ rom = open(sys.argv[1], 'r+b')
 enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
 enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
 
-baganHzInstruction = bytes([0xa2]) + enemyHorizontalPos
-baganVtInstruction = bytes([0xa2]) + enemyVerticalPos
+hInstructionAdr = 0xe067
+vInstructionAdr = 0xe06d
 
-baganHzPosAdr = 0xe067
-baganVtPosAdr = 0xe06d
-
-rom.seek(baganHzPosAdr)
-rom.write(baganHzInstruction)
-
-rom.seek(baganVtPosAdr)
-rom.write(baganVtInstruction)
+patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
 
 rom.close()
+
+
+
+def patch_enemy_pos_instructions(fileObj, hPos, vPos, hAdr, vAdr):
+    lda = 0xa2
+    enemyHzInstruction = bytes([lda]) + hPos
+    enemyVtInstruction = bytes([lda]) + vPos
+
+    #baganHzPosAdr = 0xe067
+    #baganVtPosAdr = 0xe06d
+
+    rom.seek(hAdr)
+    rom.write(enemyHzInstruction)
+
+    rom.seek(vAdr)
+    rom.write(enemyVtInstruction)

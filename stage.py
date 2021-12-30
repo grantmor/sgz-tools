@@ -645,6 +645,18 @@ def int_to_16_le(num):
     return word
 
 
+def patch_enemy_pos_instructions(fileObj, hPos, vPos, hAdr, vAdr):
+    lda = 0xa2
+    enemyHzInstruction = bytes([lda]) + hPos
+    enemyVtInstruction = bytes([lda]) + vPos
+
+    fileObj.seek(hAdr)
+    fileObj.write(enemyHzInstruction)
+
+    fileObj.seek(vAdr)
+    fileObj.write(enemyVtInstruction)
+
+
 def patch_stage(romPath, stageInfo, stageConfig, stageData):
     rom = open(romPath, 'r+b')
 
@@ -718,17 +730,11 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
         enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
         enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
 
-        battraTwoHzInstruction = bytes([0xa2]) + enemyHorizontalPos
-        battraTwoVtInstruction = bytes([0xa2]) + enemyVerticalPos
+        hPosInstructionAdr = 0xe03c
+        vPosInstructionAdr = 0xe042
+            
+        patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hPosInstructionAdr, vPosInstructionAdr)
 
-        battraTwoHzPosAdr = 0xe03c
-        battraTwoVtPosAdr = 0xe042
-
-        rom.seek(battraTwoHzPosAdr)
-        rom.write(battraTwoHzInstruction)
-
-        rom.seek(battraTwoVtPosAdr)
-        rom.write(battraTwoVtInstruction)
     else:
         enemyPositionBuffer = bytearray()
         enemyPositionBuffer += enemyHorizontalPos
