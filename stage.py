@@ -124,7 +124,7 @@ class Stage:
 
                 #self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseEnemyPosRomAdr = 0xd216 
-                self.baseStatInitRomAdr = 0xd1c4
+                self.baseStatInitRomAdr = 0xd1f8
                 
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
@@ -157,7 +157,7 @@ class Stage:
 
                 #self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseEnemyPosRomAdr = 0xd248  # Only Battra 1
-                self.baseStatInitRomAdr = 0xd1c4
+                self.baseStatInitRomAdr = 0xd22a
                 
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
@@ -187,7 +187,7 @@ class Stage:
 
                 #self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseEnemyPosRomAdr = 0xd27a 
-                self.baseStatInitRomAdr = 0xd1c4
+                self.baseStatInitRomAdr = 0xd25c
                 
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
@@ -726,7 +726,7 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
         rom.seek(stageInfo.baseEnemyPosRomAdr)
         rom.write(enemyPositionBuffer)
 
-        # TODO: Handle Battra 2... hard coded into instructions @~01e03f
+        # Battra 2
         enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
         enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
 

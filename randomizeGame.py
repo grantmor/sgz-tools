@@ -371,8 +371,6 @@ for stage in stageRange:
 
     eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, stdPalettes)
 
-
-
     #print_uncompressed_map_data(randomMap)
 
     stageData = pack_test_map(
@@ -387,9 +385,8 @@ for stage in stageRange:
     patch_stage(sys.argv[1], stageInfo, stageConfig, stageData)
 
 # Handling Stage 6 Manually for now
-# Randomize Bagan's Location
 
-# TODO: Make this and Battra 2 code into a function
+# Randomize Bagan's Location
 
 rom = open(sys.argv[1], 'r+b')
 
@@ -404,17 +401,3 @@ patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstruc
 rom.close()
 
 
-
-def patch_enemy_pos_instructions(fileObj, hPos, vPos, hAdr, vAdr):
-    lda = 0xa2
-    enemyHzInstruction = bytes([lda]) + hPos
-    enemyVtInstruction = bytes([lda]) + vPos
-
-    #baganHzPosAdr = 0xe067
-    #baganVtPosAdr = 0xe06d
-
-    rom.seek(hAdr)
-    rom.write(enemyHzInstruction)
-
-    rom.seek(vAdr)
-    rom.write(enemyVtInstruction)
