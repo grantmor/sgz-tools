@@ -57,14 +57,18 @@ class Stage:
                 
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
-                #self.maxEnergyOffset = 0x02
-                #self.startEnemyEnergyOffset = 0x04
-                #self.enemyEnergyMaxOffset = 0x06
 
                 self.horizontalPosOffset = 0x0c
                 self.verticalPosOffset = 0x0e
 
                 self.playableZones = 4
+                
+                self.playerMaxEnergy = 600
+                self.enemyMaxEnergy = 600
+
+                self.stageTime = 240
+
+                self.tilesInMap = 640
 
             elif stage == 2:
                 self.eventOffset = 0x02b06e
@@ -85,7 +89,6 @@ class Stage:
                 self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
                 self.enemyBasePtrVal = 0xb5f4
-                #self.enemyBasePtrVal = 0x35f4
 
                 self.baseEnemyPosRomAdr = 0xceb3  
                 self.baseStatInitRomAdr = 0xd1c4
@@ -98,6 +101,13 @@ class Stage:
 
                 self.playableZones = 4
 
+                self.playerMaxEnergy = 600
+                self.enemyMaxEnergy = 550
+
+                self.stageTime = 400
+
+                self.tilesInMap = 640
+
             elif stage == 3:
                 self.eventOffset = 0x02b0ed
                 self.eventSize = 0x0fd
@@ -105,8 +115,7 @@ class Stage:
                 self.terrainOffset = 0x0b06e0
                 self.terrainSize = 0x097a
                 
-                #self.enemyOffset = 0x0b3782 #3916
-                self.enemyOffset = 0x0b3916 #3916
+                self.enemyOffset = 0x0b3916 
                 self.enemySize = 0x0716
 
                 self.mapPtrOffsetA = 0x0b0020
@@ -118,11 +127,6 @@ class Stage:
                 self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
                 self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
-                # Skipping time, stat init for now...
-                ## ALL COPIED FROM STAGE 2 FOR NOW
-                # Try copying from 1 instead, stage 2 might be weird
-
-                #self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseEnemyPosRomAdr = 0xd216 
                 self.baseStatInitRomAdr = 0xd1f8
                 
@@ -133,6 +137,13 @@ class Stage:
                 self.verticalPosOffset = 0x0e
 
                 self.playableZones = 6
+
+                self.playerMaxEnergy = 600
+                self.enemyMaxEnergy = 700
+
+                self.stageTime = 480
+
+                self.tilesInMap = 960
 
             elif stage == 4:
                 self.eventOffset = 0x02b1ea
@@ -149,13 +160,11 @@ class Stage:
                 
                 self.mapBasePtr = 0x8c24
 
-                # COPIED FROM 1 OR 2
                 self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
                 self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
                 self.enemyBasePtrVal = 0xbe98
 
-                #self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseEnemyPosRomAdr = 0xd248  # Only Battra 1
                 self.baseStatInitRomAdr = 0xd22a
                 
@@ -166,6 +175,14 @@ class Stage:
                 self.verticalPosOffset = 0x0e
 
                 self.playableZones = 8
+
+                self.playerMaxEnergy = 700
+                self.enemyMaxEnergy = 550
+
+                self.stageTime = 520
+
+                self.tilesInMap = 1280
+
             elif stage == 5:
                 self.eventOffset = 0x02b318
                 self.eventSize = 0x0188
@@ -179,13 +196,11 @@ class Stage:
                 
                 self.mapBasePtr = 0x90f0
 
-                # COPIED FROM 1 OR 2
                 self.enemyPtrOffsetA = self.mapPtrOffsetA + 0x90
                 self.enemyPtrOffsetB = self.enemyPtrOffsetA + 0x08
 
                 self.enemyBasePtrVal = 0xc3ce
 
-                #self.baseEnemyPosRomAdr = 0xd1e2 
                 self.baseEnemyPosRomAdr = 0xd27a 
                 self.baseStatInitRomAdr = 0xd25c
                 
@@ -196,8 +211,16 @@ class Stage:
                 self.verticalPosOffset = 0x0e
 
                 self.playableZones = 8
+
+                self.playerMaxEnergy = 700
+                self.enemyMaxEnergy = 800
+
+                self.stageTime = 770
+
+                self.tilesInMap = 1280
+
         elif version == 'j11':
-            # TOTO: Implement
+            # TODO: Implement
             pass
         else:
             # Throw Error
@@ -205,11 +228,14 @@ class Stage:
 
 @dataclass(frozen=True)
 class StageConfig:
-
     playerPosX: int
     playerPosY: int
+
     enemyPosX: int
     enemyPosY: int
+
+    secondEnemyPosX: int
+    secondEnemyPosY: int
 
     stageTime: int
 
@@ -348,7 +374,6 @@ def row_header(mapRow, palettePresent):
     return rowHeader
 
 
-# this and other functions may need to be made more generic to be reused with enemies...
 def tile_type_sequence(mapRow, stdPalettes, palettePresent):
     newTileSequence = bytearray()
 
@@ -388,13 +413,9 @@ def compress_map_data(mapData, stdPalettes, palettePresent):
     bRegionOffset = 0x00
 
     for rowIdx, row in enumerate(range(0, numRows)):
-        # Should condition (rowIdx < numRows go here instead of below?)
-
         rowOffset = rowIdx * engine.TilesInRow * tileStride
         nextRowOffset = (rowIdx + 1) * engine.TilesInRow * tileStride
 
-        # Should this be condition removed?
-        #if rowIdx < numRows:
         rowData = bytes()
         rowSlice = mapData[rowOffset:nextRowOffset]
 
@@ -424,7 +445,7 @@ def compress_map_data(mapData, stdPalettes, palettePresent):
 
 
 # Zones are populated starting with the A region (west), folowed by the B Region (east)
-def coord_to_map_offset(col, row, palettePresent):
+def coord_to_map_offset_region_split(col, row, palettePresent):
 
     #print()
     #print(f'coord_to_map_offset')
@@ -456,7 +477,7 @@ def merge_event_list_map_data(mapData, eventList, insertSpecialEnergy, palettesP
     # Get list of event offsets
     eventPositionMap = {}
     for event in eventList:
-        eventPositionMap[coord_to_map_offset(event.col, event.row, palettesPresent)] = event_obj_to_tile(event)
+        eventPositionMap[coord_to_map_offset_region_split(event.col, event.row, palettesPresent)] = event_obj_to_tile(event)
 
     # Upgrade Resupply Bases to Special Energy
     if insertSpecialEnergy:
@@ -497,7 +518,7 @@ def merge_enemy_list_map_data(mapData, enemyList, palettesPresent, stdPalettes):
     # Get list of enemy offsets
     enemyPositionMap = {}
     for enemy in enemyList:
-        enemyPositionMap[coord_to_map_offset(enemy.col, enemy.row, palettesPresent)] = enemy.type
+        enemyPositionMap[coord_to_map_offset_region_split(enemy.col, enemy.row, palettesPresent)] = enemy.type
     
     tileIdx = 0
     while tileIdx < len(mapData):
@@ -717,6 +738,7 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
 
         rom.seek(stageInfo.baseEnemyPosRomAdr)
         rom.write(enemyPositionBuffer)
+
     elif stageInfo.stageNumber == 4:
         # This part can be moved to generic block...?
         enemyPositionBuffer = bytearray()
@@ -727,8 +749,8 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
         rom.write(enemyPositionBuffer)
 
         # Battra 2
-        enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
-        enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
+        enemyHorizontalPos = int_to_16_le(stageConfig.secondEnemyPosX)
+        enemyVerticalPos = int_to_16_le(stageConfig.secondEnemyPosY)
 
         hPosInstructionAdr = 0xe03c
         vPosInstructionAdr = 0xe042
@@ -750,7 +772,7 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
     energyBuffer += int_to_16_le(stageConfig.enemyEnergyStart)
     energyBuffer += int_to_16_le(stageConfig.enemyEnergyMax)
 
-    # Player/Enemy Health
+    # Player/Enemy Energy
     rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset)
     rom.write(energyBuffer)
 

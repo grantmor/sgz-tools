@@ -24,47 +24,97 @@ from stageMap import *
 # TODO: Sprinkle in stuff in "Empty Zones"?
 
 # TODO: MVP
-# 1) Prevent enemies spawning on critical tiles (optional switch) impl randomizer options dataclass
+# DONE) Prevent enemies spawning on critical tiles (optional switch) impl randomizer options dataclass
 #   - Some tiles appear to be placed by the engine... need to make sure not to place tiles there    
 # 2) Finish Persistent health/time 
-# 3) Randomize Player / Enemy location for all maps
+# DONE) Randomize Player / Enemy location for all maps
 # DONE?) Prevent spawning on umovable tiles 
 # 5) Basic unmovable obstacles / mine lines / electric lines
 # 6) Patch warp to be random (every time or per stage)
 # 7) Refactor to handle verification of level size
 # 8) Randomize Super Lab?
+# 9) Random MUFO?
 
+def coord_to_map_offset_only_terrain_no_split(col, row, tilesInMap):
+    offset = row * engine.TilesInRow * engine.RegionsInZone + col
+
+    return offset
 
 def stage_info(stageNum):
     return Stage(stageNum, 'us11')
 
 
-def stage_config(stageNum, inaccessibleTiles, maxCoordY):
+def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
+
+    # Refactor this to use stageInfo object later
+    if stageNum in [1,2]:
+        tilesInMap = 640
+    elif stageNum == 3:
+        tilesInMap = 960
+    else:
+        tilesInMap = 1280
 
     while True:
-        playerX = random.randint(0, coord_to_steps(39)) 
-        playerY = random.randint(coord_to_steps(maxCoordY), coord_to_steps(31))
+        playerX = random.randint(0, 39) 
+        playerY = random.randint(maxCoordY, 31)
+        
+        playerStepsX =  coord_to_steps(playerX)
+        playerStepsY = coord_to_steps(playerY)
 
-        if coord_to_map_offset(playerX, playerY, False) not in inaccessibleTiles: break
+        playerOffset = coord_to_map_offset_only_terrain_no_split(playerX, playerY, tilesInMap) 
+
+        #print(f'playerOffset:{playerOffset}')
+
+        if playerOffset not in inaccessibleTiles: break
 
     while True:
-        enemyX = random.randint(0, coord_to_steps(39)) 
-        enemyY = random.randint(coord_to_steps(maxCoordY), coord_to_steps(31))
+        enemyX = random.randint(0, 39) 
+        enemyY = random.randint(maxCoordY, 31)
 
-        if coord_to_map_offset(enemyX, enemyY, False) not in inaccessibleTiles: break
+        enemyStepsX = coord_to_steps(enemyX)
+        enemyStepsY = coord_to_steps(enemyY)
 
-    stageConfig = StageConfig(
+        if stageNum == 4:
+            secondEnemyX = random.randint(0, 39) 
+            secondEnemyY = random.randint(maxCoordY, 31)
 
-        playerX,
-        playerY,
+            secondEnemyStepsX = coord_to_steps(secondEnemyX)
+            secondEnemyStepsY = coord_to_steps(secondEnemyY)
+        else:
+            secondEnemyX = 0
+            secondEnemyY = 0
 
-        enemyX,
-        enemyY,
+            secondEnemyStepsX = 0
+            secondEnemyStepsY = 0
 
-        999,
 
-        600, 600,
-        600, 600,
+        firstPosOffset = coord_to_map_offset_only_terrain_no_split(enemyX, enemyY, tilesInMap)
+        secondPosOffset = coord_to_map_offset_only_terrain_no_split(secondEnemyX, secondEnemyY, tilesInMap)
+
+        firstPosOk = firstPosOffset not in inaccessibleTiles
+        secondPosOk = secondPosOffset not in inaccessibleTiles
+
+        #print(f'firstEnemyPosOffset: {firstPosOffset}')
+        #print(f'secondEnemyPosOffset: {secondPosOffset}')
+
+        if stageNum != 4: secondPosOk = True
+        if firstPosOk and secondPosOk: break
+# Finish coding second enemy parameters, modify stage_config to take randomizer params, set values here
+    stageConfig = StageConfig (
+
+        playerStepsX,
+        playerStepsY,
+
+        enemyStepsX,
+        enemyStepsY,
+
+        secondEnemyStepsX,
+        secondEnemyStepsY,
+
+        stageInfo.stageTime,
+
+        stageInfo.playerMaxEnergy, stageInfo.playerMaxEnergy,
+        stageInfo.enemyMaxEnergy, stageInfo.enemyMaxEnergy,
     )
 
     return stageConfig
@@ -106,7 +156,6 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
     eventList = []
-
     
     if mapParams.numTraps > 0:
         trapIndex = 0
@@ -123,7 +172,7 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
             eventList.append(trapEvent)
 
             # Add events to critical tiles list
-            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
+            criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap))
 
     if mapParams.numItems > 0:
         for event in range(0, mapParams.numItems + 1):
@@ -149,7 +198,7 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
             eventList.append(itemPoint)
 
             # Add events to critical tiles list
-            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
+            criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, False))
 
     if mapParams.numResupplies > 0:
 
@@ -167,7 +216,7 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
             eventList.append(resupplyPoint)
 
             # Add events to critical tiles list
-            criticalTiles.append(coord_to_map_offset(xPos, yPos, False))
+            criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap))
 
     #print(criticalTiles)
 
@@ -258,7 +307,7 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
     ####################################################################
     # Placing enemies - do this more efficiently later -
     # Generate list of required positions first, then assign positions
-    # Change critical tile list to a map?
+    # Change critical tile list to a map so this isn't quadratic?
     
     enemyTypes = [
         enemies.Tank,
@@ -275,8 +324,10 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
                 yPos = random.randint(maxCoordY, 31)
 
                 if not randomizerFlags.NoEnemySpawnEvent: break
-                
-                if coord_to_map_offset(xPos, yPos, False) not in criticalTiles:
+                print(f'xPos, YPos: {xPos},{yPos}') 
+                print(f'Offset: {coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap)}')
+                print(f'criticalTiles: {criticalTiles}')
+                if coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap) not in criticalTiles:
                     break
 
             enemyList.append(EnemyUnit(enemyType, xPos, yPos))
@@ -285,7 +336,8 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
     #for enemy in enemyList:
     #    print(coord_to_map_offset(enemy.col, enemy.row, False))
 
-    stageConfig = stage_config(stageInfo.stageNumber, inaccessibleTiles, maxCoordY)
+    print(f'Final inaccessibleTiles list:{inaccessibleTiles}')
+    stageConfig = stage_config(stageInfo.stageNumber, randomizerFlags, inaccessibleTiles, maxCoordY)
 
     return eventList, randomMap, enemyList, stageConfig
 

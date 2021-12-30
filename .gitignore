@@ -3,6 +3,7 @@
 *.smc
 *.bst
 *.sym
+testing.py
 
 testing.py
 
