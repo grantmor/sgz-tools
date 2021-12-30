@@ -1,3 +1,4 @@
+import random
 from math import floor
 from dataclasses import dataclass
 
@@ -705,7 +706,7 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
         rom.seek(stageInfo.baseEnemyPosRomAdr)
         rom.write(enemyPositionBuffer)
     elif stageInfo.stageNumber == 4:
-
+        # This part can be moved to generic block...?
         enemyPositionBuffer = bytearray()
         enemyPositionBuffer += enemyHorizontalPos
         enemyPositionBuffer += enemyVerticalPos
@@ -714,8 +715,20 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
         rom.write(enemyPositionBuffer)
 
         # TODO: Handle Battra 2... hard coded into instructions @~01e03f
-        enemyHorizontalPos = int_to_16_le(stageConfig.enemyPosX)
-        enemyVerticalPos = int_to_16_le(stageConfig.enemyPosY)
+        enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
+        enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
+
+        battraTwoHzInstruction = bytes([0xa2]) + enemyHorizontalPos
+        battraTwoVtInstruction = bytes([0xa2]) + enemyVerticalPos
+
+        battraTwoHzPosAdr = 0xe03c
+        battraTwoVtPosAdr = 0xe042
+
+        rom.seek(battraTwoHzPosAdr)
+        rom.write(battraTwoHzInstruction)
+
+        rom.seek(battraTwoVtPosAdr)
+        rom.write(battraTwoVtInstruction)
     else:
         enemyPositionBuffer = bytearray()
         enemyPositionBuffer += enemyHorizontalPos

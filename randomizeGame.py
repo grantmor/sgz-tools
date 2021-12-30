@@ -385,3 +385,27 @@ for stage in stageRange:
     )
 
     patch_stage(sys.argv[1], stageInfo, stageConfig, stageData)
+
+# Handling Stage 6 Manually for now
+# Randomize Bagan's Location
+
+# TODO: Make this and Battra 2 code into a function
+
+rom = open(sys.argv[1], 'r+b')
+
+enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
+enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
+
+baganHzInstruction = bytes([0xa2]) + enemyHorizontalPos
+baganVtInstruction = bytes([0xa2]) + enemyVerticalPos
+
+baganHzPosAdr = 0xe067
+baganVtPosAdr = 0xe06d
+
+rom.seek(baganHzPosAdr)
+rom.write(baganHzInstruction)
+
+rom.seek(baganVtPosAdr)
+rom.write(baganVtInstruction)
+
+rom.close()
