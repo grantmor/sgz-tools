@@ -28,7 +28,7 @@ from stageMap import *
 #   - Some tiles appear to be placed by the engine... need to make sure not to place tiles there    
 # 2) Finish Persistent health/time 
 # DONE) Randomize Player / Enemy location for all maps
-# DONE?) Prevent spawning on umovable tiles 
+# DONE) Prevent spawning on umovable tiles 
 # 5) Basic unmovable obstacles / mine lines / electric lines
 # 6) Patch warp to be random (every time or per stage)
 # 7) Refactor to handle verification of level size
@@ -124,7 +124,7 @@ def coord_to_steps(coord):
     return coord * 8
 
 
-def generate_stage(stageInfo, randomizerFlags, stagePalettes):
+def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     if stageInfo.stageNumber < 3:
         numZonesInStage = 4
@@ -146,8 +146,10 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
         criticalTiles.append(stageSixLabOffset) # Super Energy Lab for Stage 6
 
 
-    if stageInfo.stageNumber in [1,2]:
+    if stageInfo.stageNumber == 1:
         mapParams = MapParameters(2, 6, 4, 2, 0, 12)
+    elif stageInfo.stageNumber == 2:
+        mapParams = MapParameters(4, 6, 4, 2, 0, 12)
     elif stageInfo.stageNumber == 3:
         mapParams = MapParameters(2, 10, 8, 3, 6, 16)
     else: 
@@ -219,6 +221,16 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
             criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap))
 
     #print(criticalTiles)
+
+    #####################
+    # Super Energy Bank #
+    #####################
+
+
+    if stageInfo.stageNumber in [5,6]:
+
+        eventList.append(Event(events.Trap, 0x00, superBank.xPos, superBank.yPos))
+        criticalTiles.append(coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos, stageInfo.tilesInMap))
 
     # Log Events
     #print()
@@ -341,6 +353,44 @@ def generate_stage(stageInfo, randomizerFlags, stagePalettes):
 
     return eventList, randomMap, enemyList, stageConfig
 
+# patches in super energy bank tile coordinates and returns super bank coords for generate_stage() for stage 5
+def patch_super_bank(fileObj):
+    #labCol = 0x23
+    #labRow = 0x0d
+    superBankX = random.randint(0, 39)
+    superBankY = random.randint(0, 31)
+
+    superBank = SuperBank(
+        superBankX,
+        superBankY
+    )
+
+    unknownConstant = 0x04
+
+    xSuperBankBytes = superBankX << 3
+    xSuperBankBytes += unknownConstant
+
+    ySuperBankBytes = superBankY << 3
+    ySuperBankBytes += unknownConstant
+
+
+    # patch in super bank instructions
+    xAdr = 0x0e0ed
+    yAdr = 0x0e0f0
+
+    ldx = 0xa2
+    ldy = 0xa0
+
+    bankXPosInstruction = bytes([ldx]) + int_to_16_le(xSuperBankBytes)
+    bankYPosInstruction = bytes([ldy]) + int_to_16_le(ySuperBankBytes)
+
+    fileObj.seek(xAdr)
+    fileObj.write(bankXPosInstruction)
+
+    fileObj.seek(yAdr)
+    fileObj.write(bankYPosInstruction)
+
+    return  superBank
 
 
 ######################
@@ -409,6 +459,24 @@ ruralPalette = {
     enemies.Mine: palettes.Enemy
 }
 
+# Handling Stage 6 Manually for now
+# MUST BE DONE BEFORE PATCHING OTHER STAGES TO GET SUPER BANK POSITION
+# Randomize Bagan's Location
+
+rom = open(sys.argv[1], 'r+b')
+
+enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
+enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
+
+hInstructionAdr = 0xe067
+vInstructionAdr = 0xe06d
+
+patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
+superBank = patch_super_bank(rom)
+
+rom.close()
+
+# Patching remaining stages
 numStages = 5
 stageRange = range(1, numStages + 1)
 
@@ -421,7 +489,7 @@ for stage in stageRange:
     else:
         stdPalettes = urbanPalette 
 
-    eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, stdPalettes)
+    eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, superBank, stdPalettes)
 
     #print_uncompressed_map_data(randomMap)
 
@@ -435,21 +503,5 @@ for stage in stageRange:
     )
 
     patch_stage(sys.argv[1], stageInfo, stageConfig, stageData)
-
-# Handling Stage 6 Manually for now
-
-# Randomize Bagan's Location
-
-rom = open(sys.argv[1], 'r+b')
-
-enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
-enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
-
-hInstructionAdr = 0xe067
-vInstructionAdr = 0xe06d
-
-patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
-
-rom.close()
 
 

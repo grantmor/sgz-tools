@@ -270,6 +270,11 @@ palettes = Palettes()
 engine = Engine()
 
 
+@dataclass(frozen=True)
+class SuperBank:
+    xPos: int
+    yPos:int
+
 def print_uncompressed_map_data(data, palettesPresent):
     tileStride = engine.TilePalettePairLength if palettesPresent else 1
 
@@ -667,6 +672,7 @@ def int_to_16_le(num):
 
 
 def patch_enemy_pos_instructions(fileObj, hPos, vPos, hAdr, vAdr):
+    # This works, but is this the right opcode???
     lda = 0xa2
     enemyHzInstruction = bytes([lda]) + hPos
     enemyVtInstruction = bytes([lda]) + vPos
