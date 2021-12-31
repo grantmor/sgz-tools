@@ -14,7 +14,8 @@ class Event:
         self.row = row
 
         self.pen = 0xf1
-        self.last = 0x00 # Also could be 0x00
+
+        self.last = 0x00
 
 
 class Stage:
@@ -66,6 +67,8 @@ class Stage:
                 self.playerMaxEnergy = 600
                 self.enemyMaxEnergy = 600
 
+                self.warpTableRomAdr = 0xc0ff
+
                 self.stageTime = 240
 
                 self.tilesInMap = 640
@@ -104,6 +107,8 @@ class Stage:
                 self.playerMaxEnergy = 600
                 self.enemyMaxEnergy = 550
 
+                self.warpTableRomAdr = 0xc103
+
                 self.stageTime = 400
 
                 self.tilesInMap = 640
@@ -140,6 +145,8 @@ class Stage:
 
                 self.playerMaxEnergy = 600
                 self.enemyMaxEnergy = 700
+
+                self.warpTableRomAdr = 0xc107
 
                 self.stageTime = 480
 
@@ -179,6 +186,8 @@ class Stage:
                 self.playerMaxEnergy = 700
                 self.enemyMaxEnergy = 550
 
+                self.warpTableRomAdr = 0xc10b
+
                 self.stageTime = 520
 
                 self.tilesInMap = 1280
@@ -215,6 +224,8 @@ class Stage:
                 self.playerMaxEnergy = 700
                 self.enemyMaxEnergy = 800
 
+                self.warpTableRomAdr = 0xc10f
+
                 self.stageTime = 770
 
                 self.tilesInMap = 1280
@@ -241,8 +252,12 @@ class StageConfig:
 
     playerEnergyStart: int
     playerEnergyMax: int
+
     enemyEnergyStart: int
     enemyEnergyMax: int
+    
+    warpX: int
+    warpY: int
 
 @dataclass(frozen=True)
 class StageData:
@@ -457,7 +472,6 @@ def coord_to_map_offset_region_split(col, row, palettePresent):
 
     tileStride = engine.TilePalettePairLength if palettePresent else 1
     tilesInMap = engine.MaxZones * engine.RowsPerZone * engine.TilesInRow
-    # Need to subtract one row worth of tiles because of zero-based indexing
     regionModifier = int(tilesInMap / 2 - engine.TilesInRow) if col >= engine.TilesInRow else 0
     offset = (row * engine.TilesInRow  + col + regionModifier) * tileStride
 
@@ -727,6 +741,14 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
 
     rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset)
     rom.write(playerPositionBuffer)
+
+    # Warp Table
+    warpDataBuffer = bytearray() 
+    warpDataBuffer += int_to_16_le(stageConfig.warpX) 
+    warpDataBuffer += int_to_16_le(stageConfig.warpY)
+
+    rom.seek(stageInfo.warpTableRomAdr)
+    rom.write(warpDataBuffer)
 
     # Enemy Position
 

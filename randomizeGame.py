@@ -63,9 +63,9 @@ def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
 
         playerOffset = coord_to_map_offset_only_terrain_no_split(playerX, playerY, tilesInMap) 
 
-        #print(f'playerOffset:{playerOffset}')
+        print(f'playerOffset:{playerOffset}')
 
-        if playerOffset not in inaccessibleTiles: break
+        if not (playerOffset in inaccessibleTiles): break
 
     while True:
         enemyX = random.randint(0, 39) 
@@ -91,14 +91,26 @@ def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
         firstPosOffset = coord_to_map_offset_only_terrain_no_split(enemyX, enemyY, tilesInMap)
         secondPosOffset = coord_to_map_offset_only_terrain_no_split(secondEnemyX, secondEnemyY, tilesInMap)
 
-        firstPosOk = firstPosOffset not in inaccessibleTiles
-        secondPosOk = secondPosOffset not in inaccessibleTiles
+        firstPosOk = not (firstPosOffset in inaccessibleTiles)
+        secondPosOk = not (secondPosOffset in inaccessibleTiles)
 
         #print(f'firstEnemyPosOffset: {firstPosOffset}')
         #print(f'secondEnemyPosOffset: {secondPosOffset}')
 
         if stageNum != 4: secondPosOk = True
         if firstPosOk and secondPosOk: break
+    
+    while True:
+        warpX = random.randint(0, 39)
+        warpY = random.randint(maxCoordY, 31)
+
+        warpStepsX = coord_to_steps(warpX)
+        warpStepsY = coord_to_steps(warpY)
+
+        warpToPosOffset = coord_to_map_offset_only_terrain_no_split(warpX, warpY, tilesInMap)
+
+        if not (warpToPosOffset in inaccessibleTiles) : break
+
 # Finish coding second enemy parameters, modify stage_config to take randomizer params, set values here
     stageConfig = StageConfig (
 
@@ -115,6 +127,9 @@ def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
 
         stageInfo.playerMaxEnergy, stageInfo.playerMaxEnergy,
         stageInfo.enemyMaxEnergy, stageInfo.enemyMaxEnergy,
+
+        warpStepsX,
+        warpStepsY
     )
 
     return stageConfig
@@ -147,21 +162,23 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
 
     if stageInfo.stageNumber == 1:
-        mapParams = MapParameters(2, 6, 4, 2, 0, 12)
+        mapParams = MapParameters(2, 8, 4, 2, 0, 12, 1)
     elif stageInfo.stageNumber == 2:
-        mapParams = MapParameters(4, 6, 4, 2, 0, 12)
+        mapParams = MapParameters(4, 6, 4, 2, 0, 12, 1)
     elif stageInfo.stageNumber == 3:
-        mapParams = MapParameters(2, 10, 8, 3, 6, 16)
+        mapParams = MapParameters(2, 10, 8, 3, 6, 16, 1)
     else: 
-        mapParams = MapParameters(2, 12, 10, 4, 0, 16)
+        mapParams = MapParameters(2, 12, 10, 4, 0, 16, 1)
 
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
     eventList = []
-    
+
+    # Can turn these loops into a general "Add event" function
+    # Traps    
     if mapParams.numTraps > 0:
         trapIndex = 0
-        for event in range(0, mapParams.numTraps + 1):
+        for event in range(0, mapParams.numTraps):
 
             eventType = events.Trap
             eventPayload = trapIndex 
@@ -176,8 +193,9 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
             # Add events to critical tiles list
             criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap))
 
+    # Item Points
     if mapParams.numItems > 0:
-        for event in range(0, mapParams.numItems + 1):
+        for event in range(0, mapParams.numItems):
 
             eventType = events.Item
             eventPayload = random.randint(items.MinVal, items.MaxVal)
@@ -188,7 +206,6 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
                 items.FightingSpirit, 
                 items.EnergyRefill, 
                 items.SuperRefill, 
-                items.Warp, 
                 items.StopTime, 
                 items.Invincibility
             ]
@@ -202,14 +219,14 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
             # Add events to critical tiles list
             criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, False))
 
+    # Resupply Bases
     if mapParams.numResupplies > 0:
-
-        resuppliesAddded = 0
-        for event in range(0, mapParams.numResupplies + 1):
+        resuppliesAdded = 0
+        for event in range(0, mapParams.numResupplies):
 
             eventType = events.EnergyResupply
-            eventPayload = resuppliesAddded
-            resuppliesAddded += 1
+            eventPayload = resuppliesAdded
+            resuppliesAdded += 1
 
             xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
             yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
@@ -220,6 +237,23 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
             # Add events to critical tiles list
             criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap))
 
+    # Warps
+    if mapParams.numWarps > 0:
+        warpsAdded = 0
+        for event in range(0, mapParams.numWarps):
+
+            eventType = events.Item
+            eventPayload = items.Warp
+            warpsAdded += 1
+
+            xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
+            yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
+
+            warp = Event(eventType, eventPayload, xPos, yPos)
+            eventList.append(warp)
+
+            # Add events to critical tiles list
+            criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap))
     #print(criticalTiles)
 
     #####################
@@ -233,8 +267,8 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
         criticalTiles.append(coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos, stageInfo.tilesInMap))
 
     # Log Events
-    #print()
-    #print(f'Stage {stageInfo.stageNumber}')
+    print()
+    print(f'Stage {stageInfo.stageNumber}')
     #for event in eventList:
     #    print()
     #    print(f'event.type:{event.type}')
@@ -305,6 +339,8 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
                     randomMap.append(tiles.RockyMountain)
                 else:
                     randomMap.append(tiles.SkyScraper)
+    
+    #print(f'randomMap:{randomMap}')
     ### TODO: - Place more "obstacles" (skyscraper, rocky mountain, electric fence)
 
     # Tiles that can't be moved through (player or boss shouldn't spawn here)
@@ -336,10 +372,10 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
                 yPos = random.randint(maxCoordY, 31)
 
                 if not randomizerFlags.NoEnemySpawnEvent: break
-                print(f'xPos, YPos: {xPos},{yPos}') 
-                print(f'Offset: {coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap)}')
-                print(f'criticalTiles: {criticalTiles}')
-                if coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap) not in criticalTiles:
+                #print(f'xPos, YPos: {xPos},{yPos}') 
+                #print(f'Offset: {coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap)}')
+                #print(f'criticalTiles: {criticalTiles}')
+                if not (coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap) in criticalTiles):
                     break
 
             enemyList.append(EnemyUnit(enemyType, xPos, yPos))

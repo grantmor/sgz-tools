@@ -8,3 +8,4 @@ class MapParameters:
     numResupplies: int
     numTraps: int
     numEnemies: int
+    numWarps: int
