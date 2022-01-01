@@ -54,6 +54,7 @@ def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
     else:
         tilesInMap = 1280
 
+    # These blocks should be a function
     while True:
         playerX = random.randint(0, 39) 
         playerY = random.randint(maxCoordY, 31)
@@ -94,8 +95,8 @@ def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
         firstPosOk = not (firstPosOffset in inaccessibleTiles)
         secondPosOk = not (secondPosOffset in inaccessibleTiles)
 
-        #print(f'firstEnemyPosOffset: {firstPosOffset}')
-        #print(f'secondEnemyPosOffset: {secondPosOffset}')
+        print(f'firstEnemyPosOffset: {firstPosOffset}')
+        print(f'secondEnemyPosOffset: {secondPosOffset}')
 
         if stageNum != 4: secondPosOk = True
         if firstPosOk and secondPosOk: break
@@ -108,7 +109,7 @@ def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
         warpStepsY = coord_to_steps(warpY)
 
         warpToPosOffset = coord_to_map_offset_only_terrain_no_split(warpX, warpY, tilesInMap)
-
+        print(f'warpToPosOffset:{warpToPosOffset}')
         if not (warpToPosOffset in inaccessibleTiles) : break
 
 # Finish coding second enemy parameters, modify stage_config to take randomizer params, set values here
@@ -348,7 +349,11 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     # Find inaccessible tiles
     for tileIdx, tile in enumerate(randomMap):
+        
         if tile in [tiles.SkyScraper, tiles.RockyMountain]:
+            print(f'iaccessible: tile: {tile}')
+            print(f'iaccessible: tileIdx: {tileIdx}')
+            print()
             inaccessibleTiles.append(tileIdx)
 
     #print(f'inaccesibleTiles:{inaccessibleTiles}')
@@ -434,7 +439,7 @@ def patch_super_bank(fileObj):
 ######################
 
 # Randomizer Flags (arguments later)
-randomizerFlags = RandomizerFlags(False, False, True, True, True)
+randomizerFlags = RandomizerFlags(True, True, True, True, True)
 
 # Patch Game
 patch_features(
