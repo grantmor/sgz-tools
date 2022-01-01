@@ -91,12 +91,12 @@ class Game:
         # If Hi Byte of Energy isn't zero, don't initialize
         opcodes.LdaAbs, 0x71, 0x0e,
         opcodes.CmpIme, 0x00,
-        opcodes.BneRel, 0x11, # decimal 17### adr of jump at end
+        opcodes.BneRel, 0x13, # decimal 19### adr of jump at end
 
         # Same for Lo Byte
         opcodes.LdaAbs, 0x72, 0x0e,
         opcodes.CmpIme, 0x00,
-        opcodes.BneRel, 0x0a, #decimal 11 ### adr of jump at end
+        opcodes.BneRel, 0x0c, #decimal 13 ### adr of jump at end
 
         # Didn't branch, need to initizlize energy
         opcodes.LdaAbs, 0x73, 0x0e,
