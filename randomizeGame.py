@@ -439,14 +439,16 @@ def patch_super_bank(fileObj):
 ######################
 
 # Randomizer Flags (arguments later)
-randomizerFlags = RandomizerFlags(True, True, True, True, True)
+randomizerFlags = RandomizerFlags(True, True, True, True, True, True, True)
 
 # Patch Game
 patch_features(
     sys.argv[1],
     randomizerFlags.PersistentTime,
     randomizerFlags.PersistentEnergy,
-    randomizerFlags.NoMechaGodzillaWarp
+    randomizerFlags.NoMechaGodzillaWarp,
+    randomizerFlags.NoStartingContinues,
+    randomizerFlags.NoAddedContinues
 )
 
 # Standard Palettes

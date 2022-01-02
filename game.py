@@ -5,6 +5,7 @@ class Opcodes:
     JmpAbs = 0x4c
 
     LdaIme = 0xa9
+    LdaImeLong = 0xa0
     LdaAbs = 0xad
     LdaAbsLongIdxX = 0xbf
 
@@ -24,6 +25,8 @@ class RandomizerFlags:
     NoEnemySpawnCritical: bool
     NoEnemySpawnEvent: bool
     NoMechaGodzillaWarp: bool
+    NoStartingContinues: bool
+    NoAddedContinues: bool
 
 @dataclass(frozen=True)
 class Game:
@@ -39,11 +42,6 @@ class Game:
     # Jump to a subroutine that initializes health, time,
     # etc. if it's zero
 
-    #PersistentTimeCode = bytearray([
-    #    0x4c,
-    #    0x6a,
-    #    0xd0
-    #])
 
     PersistentTimeCode = bytearray([
         opcodes.JmpAbs, 0x8b, 0xf5,
@@ -116,9 +114,17 @@ class Game:
         0xc7
     ])
 
+    NoStartContinueInstruction = bytearray([
+        opcodes.LdaIme, 0x00
+    ])
+
+    NoAddedContinueInstruction = bytearray([
+        opcodes.LdaImeLong, 0x00, 0x00
+    ])
+
 game = Game()
 
-def patch_features(romPath, pTime, pEnergy, noWarp):
+def patch_features(romPath, pTime, pEnergy, noWarp, noStartContinues, noAddContinues):
     rom = open(romPath, 'r+b')
 
     # Patch Persistent Time
@@ -145,5 +151,15 @@ def patch_features(romPath, pTime, pEnergy, noWarp):
     if noWarp:
         rom.seek(game.NoMechaGodzillaWarpPatchRomAdr)
         rom.write(game.NoWarpCode)
+
+    # Patch No Starting Continues
+    if noStartContinues:
+        rom.seek(0x1024)
+        rom.write(game.NoStartContinueInstruction)
+
+    # Patch No Added Continues
+    if noAddContinues:
+        rom.seek(0x3e5d)
+        rom.write(game.NoAddedContinueInstruction)
 
     rom.close()
