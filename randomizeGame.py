@@ -36,9 +36,18 @@ from stageMap import *
 # 9) Random MUFO?
 
 def coord_to_map_offset_only_terrain_no_split(col, row, tilesInMap):
+    #numTilesInFullMap = engine.MaxZones * engine.RowsPerZone * engine.TilesInRow
+    #unusedtiles = numTilesInFullMap - tilesInMap
     offset = row * engine.TilesInRow * engine.RegionsInZone + col
 
-    return offset
+    return offset #- unusedtiles
+
+
+def pad_offset(offset, tilesInMap):
+    numTilesInFullMap = engine.MaxZones * engine.RowsPerZone * engine.TilesInRow
+    unusedtiles = numTilesInFullMap - tilesInMap
+
+    return offset + unusedtiles
 
 def stage_info(stageNum):
     return Stage(stageNum, 'us11')
@@ -159,7 +168,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     # NEED TO CHECK THERE BEFORE WRITING EVENTS TOO
     if stageInfo.stageNumber in [5,6] and randomizerFlags.NoEnemySpawnCritical:
-        criticalTiles.append(stageSixLabOffset) # Super Energy Lab for Stage 6
+        criticalTiles.append(pad_offset(stageSixLabOffset, stageInfo.tilesInMap)) # Super Energy Lab for Stage 6
 
 
     if stageInfo.stageNumber == 1:
@@ -218,7 +227,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
             eventList.append(itemPoint)
 
             # Add events to critical tiles list
-            criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, False))
+            criticalTiles.append(coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap))
 
     # Resupply Bases
     if mapParams.numResupplies > 0:
@@ -300,14 +309,9 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     tileIdx = 0
 
-    #stop1 = -.23
-    #stop2 = -.1
-    #stop3 = .1
-    #stop4 = .3
-
     stop1 = -.23
     stop2 = -.1
-    stop3 = .08
+    stop3 = .05
     stop4 = .3
 
     for y in range(0, yTiles):
@@ -351,10 +355,10 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     for tileIdx, tile in enumerate(randomMap):
         
         if tile in [tiles.SkyScraper, tiles.RockyMountain]:
-            print(f'iaccessible: tile: {tile}')
-            print(f'iaccessible: tileIdx: {tileIdx}')
-            print()
-            inaccessibleTiles.append(tileIdx)
+            #print(f'iaccessible: tile: {tile}')
+            #print(f'iaccessible: tileIdx: {tileIdx}')
+            #print()
+            inaccessibleTiles.append(pad_offset(tileIdx, stageInfo.tilesInMap))
 
     #print(f'inaccesibleTiles:{inaccessibleTiles}')
     ####################################################################

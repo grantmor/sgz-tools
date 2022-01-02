@@ -5,10 +5,10 @@ class Opcodes:
     JmpAbs = 0x4c
 
     LdaIme = 0xa9
-    LdaImeLong = 0xa0
     LdaAbs = 0xad
     LdaAbsLongIdxX = 0xbf
 
+    LdyImeLong = 0xa0
     StaAbs = 0x8d
 
     CmpIme = 0xc9
@@ -119,7 +119,7 @@ class Game:
     ])
 
     NoAddedContinueInstruction = bytearray([
-        opcodes.LdaImeLong, 0x00, 0x00
+        opcodes.LdyImeLong, 0x00, 0x00
     ])
 
 game = Game()
@@ -159,7 +159,9 @@ def patch_features(romPath, pTime, pEnergy, noWarp, noStartContinues, noAddConti
 
     # Patch No Added Continues
     if noAddContinues:
-        rom.seek(0x3e5d)
+        rom.seek(0x3e52)
         rom.write(game.NoAddedContinueInstruction)
 
+        rom.seek(0x3e5d)
+        rom.write(game.NoAddedContinueInstruction)
     rom.close()
