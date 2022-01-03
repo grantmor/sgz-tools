@@ -183,7 +183,7 @@ def generate_events(eventType, quantity, criticalTiles, maxCoordY, tilesInMap):
             xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
             yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
-            currentEvent = Event(eventType, eventPayload, xPos, yPos)
+            currentEvent = Event(eventType, eventPayload, xPos, yPos, False)
             newTileIdx = pad_offset(coord_to_map_offset_only_terrain_no_split(xPos, yPos), tilesInMap)
 
             if not (newTileIdx in criticalTiles): break
@@ -229,13 +229,21 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     ##########
 
     # TODO: Super Bank should be random 
-    stageSixLabOffset = 555
+    #stageSixLabOffset = 555
     criticalTiles = {}
 
-    if stageInfo.stageNumber in [5,6] and randomizerFlags.NoEnemySpawnCritical:
-        energyBankOffset = pad_offset(stageSixLabOffset, stageInfo.tilesInMap)
-        criticalTiles[energyBankOffset] = True
+    #if stageInfo.stageNumber in [5,6] and randomizerFlags.NoEnemySpawnCritical:
+    #    energyBankOffset = pad_offset(superBank., stageInfo.tilesInMap)
+    #    criticalTiles[energyBankOffset] = True
 
+    print(f'SUPER BANK:')
+    print(f'xpos: {superBank.xPos}')
+    print(f'ypos: {superBank.yPos}')
+    if stageInfo.stageNumber == 5:
+        superBankEvent = Event(events.Trap, 0x00, superBank.xPos, superBank.yPos, True)
+        superBankOffset = coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos)
+        criticalTiles[superBankOffset] = True
+        
     # Items
     itemTiles, itemEvents = generate_events(events.Item, mapParams.numItems, criticalTiles, maxCoordY, stageInfo.tilesInMap)
     criticalTiles.update(itemTiles)
@@ -251,27 +259,18 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     eventList = itemEvents + resupplyEvents + trapEvents + warpEvents
 
-
-    #####################
-    # Super Energy Bank #
-    #####################
-
-
-    if stageInfo.stageNumber in [5,6]:
-
-        eventList.append(Event(events.Trap, 0x00, superBank.xPos, superBank.yPos))
-        superBankOffset = coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos)
-        criticalTiles[superBankOffset] = True
+    if stageInfo.stageNumber == 5:
+        eventList.append(superBankEvent)
 
     # Log Events
     print()
     print(f'Stage {stageInfo.stageNumber}')
-    #for event in eventList:
-    #    print()
-    #    print(f'event.type:{event.type}')
-    #    print(f'event.payload:{event.payload}')
-    #    print(f'event.col:{event.col}')
-    #    print(f'event.row:{event.row}')
+    for event in eventList:
+        print()
+        print(f'event.type:{event.type}')
+        print(f'event.payload:{event.payload}')
+        print(f'event.col:{event.col}')
+        print(f'event.row:{event.row}')
 
 
     # Generating Random Terrain Data
@@ -332,6 +331,9 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
                 else:
                     randomMap.append(tiles.SkyScraper)
     
+
+        
+        
     #print(f'randomMap:{randomMap}')
     ### TODO: - Place more "obstacles" (skyscraper, rocky mountain, electric fence)
 

@@ -6,7 +6,7 @@ from constants import *
 from game import *
 
 class Event:
-    def __init__(self, eventType, payload, col, row): # will need to figureout first, 2ndtolast and last
+    def __init__(self, eventType, payload, col, row, terrainMod): # will need to figureout first, 2ndtolast and last
         self.first = 0x02
         self.type = eventType
         self.payload = payload
@@ -14,8 +14,9 @@ class Event:
         self.row = row
 
         self.pen = 0xf1
-
         self.last = 0x00
+
+        self.noTerrainModification = terrainMod
 
 
 class Stage:
@@ -496,7 +497,8 @@ def merge_event_list_map_data(mapData, eventList, insertSpecialEnergy, palettesP
     # Get list of event offsets
     eventPositionMap = {}
     for event in eventList:
-        eventPositionMap[coord_to_map_offset_region_split(event.col, event.row, palettesPresent)] = event_obj_to_tile(event)
+        if not event.noTerrainModification:
+            eventPositionMap[coord_to_map_offset_region_split(event.col, event.row, palettesPresent)] = event_obj_to_tile(event)
 
     # Upgrade Resupply Bases to Special Energy
     if insertSpecialEnergy:
