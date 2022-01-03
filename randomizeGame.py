@@ -196,6 +196,7 @@ def generate_events(eventType, quantity, criticalTiles, maxCoordY, tilesInMap):
             #eventTile = 
             #criticalTiles.append(eventTile)
 
+
 def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     if stageInfo.stageNumber < 3:
@@ -259,7 +260,8 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     if stageInfo.stageNumber in [5,6]:
 
         eventList.append(Event(events.Trap, 0x00, superBank.xPos, superBank.yPos))
-        #criticalTiles.append(coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos))
+        superBankOffset = coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos)
+        criticalTiles[superBankOffset] = True
 
     # Log Events
     print()
@@ -349,8 +351,6 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     ####################################################################
     # Placing enemies - do this more efficiently later -
     # Generate list of required positions first, then assign positions
-    # Change critical tile list to a map so this isn't quadratic?
-
 
     
     enemyTypes = [
@@ -384,6 +384,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     stageConfig = stage_config(stageInfo.stageNumber, randomizerFlags, inaccessibleTiles, maxCoordY)
 
     return eventList, randomMap, enemyList, stageConfig
+
 
 # patches in super energy bank tile coordinates and returns super bank coords for generate_stage() for stage 5
 def patch_super_bank(fileObj):
@@ -508,6 +509,7 @@ vInstructionAdr = 0xe06d
 patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
 superBank = patch_super_bank(rom)
 
+# NEED TO PASS SUPER BANK INTO GENERATE STAGE TO GET ADDED TO CRITICAL TILES LIST
 rom.close()
 
 # Patching remaining stages

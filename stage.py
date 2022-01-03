@@ -183,7 +183,7 @@ class Stage:
 
                 self.playableZones = 8
 
-                self.playerMaxEnergy = 700
+                self.playerMaxEnergy = 600
                 self.enemyMaxEnergy = 550
 
                 self.warpTableRomAdr = 0xc10b
