@@ -45,6 +45,7 @@ def pad_offset(offset, tilesInMap):
 
     return offset + unusedtiles
 
+
 def stage_info(stageNum):
     return Stage(stageNum, 'us11')
 
@@ -199,6 +200,7 @@ def generate_events(eventType, quantity, criticalTiles, maxCoordY, tilesInMap):
 
 def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
+
     if stageInfo.stageNumber < 3:
         numZonesInStage = 4
     elif stageInfo.stageNumber == 3:
@@ -221,24 +223,30 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
-    eventList = []
 
 
     ##########
     # Events #
     ##########
 
-    # TODO: Super Bank should be random 
-    #stageSixLabOffset = 555
+    eventList = []
+
+    # Mothership
+    mothershipOffsets = {
+        2 : coord_to_map_offset_only_terrain_no_split(31, 5),
+        3 : coord_to_map_offset_only_terrain_no_split(9, 21),
+        4 : coord_to_map_offset_only_terrain_no_split(38, 28),
+        5 : coord_to_map_offset_only_terrain_no_split(2, 30)
+    }
+
+    for val in mothershipOffsets.values():
+        print(f'mufoOffset: {val}')
+
     criticalTiles = {}
 
-    #if stageInfo.stageNumber in [5,6] and randomizerFlags.NoEnemySpawnCritical:
-    #    energyBankOffset = pad_offset(superBank., stageInfo.tilesInMap)
-    #    criticalTiles[energyBankOffset] = True
+    for val in mothershipOffsets.values():
+        criticalTiles[val] = True
 
-    print(f'SUPER BANK:')
-    print(f'xpos: {superBank.xPos}')
-    print(f'ypos: {superBank.yPos}')
     if stageInfo.stageNumber == 5:
         superBankEvent = Event(events.Trap, 0x00, superBank.xPos, superBank.yPos, True)
         superBankOffset = coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos)
@@ -261,6 +269,8 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     if stageInfo.stageNumber == 5:
         eventList.append(superBankEvent)
+
+
 
     # Log Events
     print()
@@ -332,7 +342,11 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
                     randomMap.append(tiles.SkyScraper)
     
 
-        
+    # Add Mothership Tile    
+    # 2 doesn't work for some reason?
+    if 2 < stageInfo.stageNumber < 6:
+        mufoOffset = mothershipOffsets[stageInfo.stageNumber]
+        randomMap[mufoOffset] = tiles.Mothership
         
     #print(f'randomMap:{randomMap}')
     ### TODO: - Place more "obstacles" (skyscraper, rocky mountain, electric fence)
@@ -353,6 +367,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     ####################################################################
     # Placing enemies - do this more efficiently later -
     # Generate list of required positions first, then assign positions
+
 
     
     enemyTypes = [
