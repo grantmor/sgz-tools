@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from sgzConst import *
 
+
 class Event:
     def __init__(self, eventType, payload, col, row, terrainMod):
         self.first = 0x02
@@ -27,10 +28,10 @@ class Stage:
                 self.eventSize = 0x8d
                 
                 self.terrainOffset = 0x0b00f0
-                self.terrainSize = 0x01ba
+                self.terrainSize = 810
                 
                 self.enemyOffset = 0x0b3288
-                self.enemySize = 0x036c
+                self.enemySize = 876
 
                 self.mapPtrOffsetA = 0x0b0000
                 self.mapPtrOffsetB = 0x0b0008
@@ -67,10 +68,10 @@ class Stage:
                 self.eventSize = 0x7d
                 
                 self.terrainOffset = 0x0b041a
-                self.terrainSize = 0x0436
+                self.terrainSize = 710
                
                 self.enemyOffset = 0x0b35f4
-                self.enemySize = 0x18e
+                self.enemySize = 802
 
                 self.mapPtrOffsetA = 0x0b0010
                 self.mapPtrOffsetB = 0x0b0018
@@ -107,10 +108,10 @@ class Stage:
                 self.eventSize = 0x0fd
                 
                 self.terrainOffset = 0x0b06e0
-                self.terrainSize = 0x097a
+                self.terrainSize = 1348
                 
                 self.enemyOffset = 0x0b3916 
-                self.enemySize = 0x0716
+                self.enemySize = 1410
 
                 self.mapPtrOffsetA = 0x0b0020
                 self.mapPtrOffsetB = 0x0b0028
@@ -146,10 +147,10 @@ class Stage:
                 self.eventSize = 0x012e
 
                 self.terrainOffset = 0x0b0c24
-                self.terrainSize = 0x04cc
+                self.terrainSize = 1228
 
                 self.enemyOffset = 0x0b3e98
-                self.enemySize = 0x0536
+                self.enemySize = 1334
                 
                 self.mapPtrOffsetA = 0x0b0030
                 self.mapPtrOffsetB = 0x0b0038
@@ -184,10 +185,12 @@ class Stage:
             elif stage == 5:
                 self.eventOffset = 0x02b318
                 self.eventSize = 0x0188
+
                 self.terrainOffset = 0x0b10f0
-                self.terrainSize = 0x0530
+                self.terrainSize = 1322
+
                 self.enemyOffset = 0x0b43ce
-                self.enemySize = 0x05ec
+                self.enemySize = 1516
 
                 self.mapPtrOffsetA = 0x0b0040
                 self.mapPtrOffsetB = 0x0b0048
@@ -226,6 +229,7 @@ class Stage:
             # Throw Error
             pass
 
+
 @dataclass(frozen=True)
 class StageConfig:
     playerPosX: int
@@ -247,6 +251,7 @@ class StageConfig:
     
     warpX: int
     warpY: int
+
 
 @dataclass(frozen=True)
 class StageData:
@@ -281,6 +286,7 @@ class MapParameters:
     numTraps: int
     numEnemies: int
     numWarps: int
+
 
 tiles = Tiles()
 events = Events()

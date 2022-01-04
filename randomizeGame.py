@@ -29,7 +29,6 @@ from sgzMap import *
 # 3) Parameterize instruction patching
 
 
-
 def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     if stageInfo.stageNumber < 3:
@@ -46,7 +45,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     if stageInfo.stageNumber == 1:
         mapParams = MapParameters(2, 8, 4, 2, 0, 12, 1)
     elif stageInfo.stageNumber == 2:
-        mapParams = MapParameters(4, 6, 4, 2, 0, 12, 1)
+        mapParams = MapParameters(2, 6, 4, 2, 0, 12, 1)
     elif stageInfo.stageNumber == 3:
         mapParams = MapParameters(2, 10, 8, 3, 6, 16, 1)
     else: 
@@ -68,8 +67,8 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
         5 : coord_to_map_offset_only_terrain_no_split(2, 30)
     }
 
-    for val in mothershipOffsets.values():
-        print(f'mufoOffset: {val}')
+    #for val in mothershipOffsets.values():
+    #    print(f'mufoOffset: {val}')
 
     criticalTiles = {}
 
@@ -101,14 +100,14 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
 
     # Log Events
-    print()
-    print(f'Stage {stageInfo.stageNumber}')
-    for event in eventList:
-        print()
-        print(f'event.type:{event.type}')
-        print(f'event.payload:{event.payload}')
-        print(f'event.col:{event.col}')
-        print(f'event.row:{event.row}')
+    #print()
+    #print(f'Stage {stageInfo.stageNumber}')
+    #for event in eventList:
+    #    print()
+    #    print(f'event.type:{event.type}')
+    #    print(f'event.payload:{event.payload}')
+    #    print(f'event.col:{event.col}')
+    #    print(f'event.row:{event.row}')
 
 
     # Generating Random Terrain Data
@@ -224,7 +223,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     #for enemy in enemyList:
     #    print(coord_to_map_offset(enemy.col, enemy.row, False))
 
-    print(f'Final inaccessibleTiles list:{inaccessibleTiles}')
+    #print(f'Final inaccessibleTiles list:{inaccessibleTiles}')
     stageConfig = stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY)
 
     return eventList, randomMap, enemyList, stageConfig
@@ -351,10 +350,10 @@ vInstructionAdr = 0xe06d
 patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
 superBank = patch_super_bank(rom)
 
-# NEED TO PASS SUPER BANK INTO GENERATE STAGE TO GET ADDED TO CRITICAL TILES LIST
 rom.close()
 
-# Patching remaining stages
+
+# Patching Stages
 numStages = 5
 stageRange = range(1, numStages + 1)
 
@@ -367,17 +366,35 @@ for stage in stageRange:
     else:
         stdPalettes = urbanPalette 
 
-    eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, superBank, stdPalettes)
+    # Loop until generated stage is small enough
+    mapsGenerated = 0
+    while True:
+        mapsGenerated += 1
+        eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, superBank, stdPalettes)
 
-    #print_uncompressed_map_data(randomMap)
+        #print_uncompressed_map_data(randomMap)
 
-    stageData = pack_test_map(
-        stageInfo, 
-        eventList, 
-        randomMap,
-        enemyList, 
-        stdPalettes, 
-        True
-    )
+        stageData = pack_stage(
+            stageInfo, 
+            eventList, 
+            randomMap,
+            enemyList, 
+            stdPalettes, 
+            True
+        )
+
+        print()
+        print(f'Stage: {stageInfo.stageNumber}')
+        print(f'curMapDataSize: {len(stageData.mapData)}')
+        print(f'Max map size for this stage: {stageInfo.terrainSize}')
+        print(f'curEnemyDataSize: {len(stageData.enemyData)}')
+        print(f'Max enemy size for this stage: {stageInfo.enemySize}')
+        print(f'Maps generated: {mapsGenerated}')
+        print()
+
+        eventMapDataOk = (len(stageData.mapData) <= stageInfo.terrainSize)
+        enemyMapDataOk = (len(stageData.enemyData) <= stageInfo.enemySize)
+
+        if eventMapDataOk and enemyMapDataOk: break
 
     patch_stage(sys.argv[1], stageInfo, stageConfig, stageData)

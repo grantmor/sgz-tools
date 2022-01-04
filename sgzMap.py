@@ -276,10 +276,6 @@ def merge_enemy_list_map_data(mapData, enemyList, palettesPresent, stdPalettes):
     return enemyMapData
 
 
-def pack_map(self, events, map, enemies): 
-    pass
-
-
 def insert_palettes(mapData, stdPalettes):
     mapDataWithPalettes = bytearray()
     
@@ -306,6 +302,7 @@ def split_map_by_region(mapData):
         tileIdx += 1
     return regionA + regionB
 
+
 def pad_map(mapData, padTile):
     mapTiles = len(mapData)
     maxMapTiles = engine.MaxZones * engine.RowsPerZone * engine.TilesInRow
@@ -325,7 +322,6 @@ def pad_map(mapData, padTile):
     return paddedMap + mapData
 
 
-
 def coord_to_map_offset_only_terrain_no_split(col, row):
     offset = row * engine.TilesInRow * engine.RegionsInZone + col
     return offset 
@@ -336,8 +332,6 @@ def pad_offset(offset, tilesInMap):
     unusedtiles = numTilesInFullMap - tilesInMap
 
     return offset + unusedtiles
-
-
 
 
 def coord_to_steps(coord):

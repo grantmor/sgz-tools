@@ -36,7 +36,7 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
 
         playerOffset = coord_to_map_offset_only_terrain_no_split(playerX, playerY) 
 
-        print(f'playerOffset:{playerOffset}')
+        #print(f'playerOffset:{playerOffset}')
 
         if not (playerOffset in inaccessibleTiles): break
 
@@ -67,8 +67,8 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
         firstPosOk = not (firstPosOffset in inaccessibleTiles)
         secondPosOk = not (secondPosOffset in inaccessibleTiles)
 
-        print(f'firstEnemyPosOffset: {firstPosOffset}')
-        print(f'secondEnemyPosOffset: {secondPosOffset}')
+        #print(f'firstEnemyPosOffset: {firstPosOffset}')
+        #print(f'secondEnemyPosOffset: {secondPosOffset}')
 
         if stageInfo.stageNumber != 4: secondPosOk = True
         if firstPosOk and secondPosOk: break
@@ -81,7 +81,8 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
         warpStepsY = coord_to_steps(warpY)
 
         warpToPosOffset = coord_to_map_offset_only_terrain_no_split(warpX, warpY)
-        print(f'warpToPosOffset:{warpToPosOffset}')
+        #print(f'warpToPosOffset:{warpToPosOffset}')
+
         if not (warpToPosOffset in inaccessibleTiles) : break
 
 # Finish coding second enemy parameters, modify stage_config to take randomizer params, set values here
@@ -108,7 +109,7 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
     return stageConfig
 
 
-def pack_test_map(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPresent):
+def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPresent):
 
     #print(f'\n\n\n*** Stage  {stage.stageNumber} ***\n')
     #print(f'\nmap before pad:')
