@@ -4,12 +4,11 @@ import random
 from perlin_noise import *
 import matplotlib.pyplot as plot
 
-from constants import *
-from stage import *
-
-from game import *
-from stageMap import *
-
+from sgzConst import *
+from sgzGame import *
+from sgzType import *
+from sgzStage import *
+from sgzMap import *
 
 # TODO: Finish movement randomization for all bosses (currently only MG)
 # TODO: Refactor - Split Map and Stage functionality
@@ -24,182 +23,14 @@ from stageMap import *
 # TODO: Sprinkle in stuff in "Empty Zones"?
 
 # TODO: MVP
-# ?) Prevent enemies spawning on critical tiles (optional switch) impl randomizer options dataclass
 #   - Some tiles appear to be placed by the engine... need to make sure not to place tiles there    
 # 1) Basic unmovable obstacles / mine lines / electric lines
 # 2) Refactor to handle verification of level size
-# 3) Add Mothership on appropritate tiles
-# 4) Refactor event code into function, PAD OFFSET***
+# 3) Parameterize instruction patching
 
-def coord_to_map_offset_only_terrain_no_split(col, row):
-    #numTilesInFullMap = engine.MaxZones * engine.RowsPerZone * engine.TilesInRow
-    #unusedtiles = numTilesInFullMap - tilesInMap
-    offset = row * engine.TilesInRow * engine.RegionsInZone + col
-
-    return offset #- unusedtiles
-
-
-def pad_offset(offset, tilesInMap):
-    numTilesInFullMap = engine.MaxZones * engine.RowsPerZone * engine.TilesInRow
-    unusedtiles = numTilesInFullMap - tilesInMap
-
-    return offset + unusedtiles
-
-
-def stage_info(stageNum):
-    return Stage(stageNum, 'us11')
-
-
-def stage_config(stageNum, randomizerFlags, inaccessibleTiles, maxCoordY):
-
-    # Refactor this to use stageInfo object later
-    if stageNum in [1,2]:
-        tilesInMap = 640
-    elif stageNum == 3:
-        tilesInMap = 960
-    else:
-        tilesInMap = 1280
-
-    # These blocks should be a function
-    while True:
-        playerX = random.randint(0, 39) 
-        playerY = random.randint(maxCoordY, 31)
-        
-        playerStepsX =  coord_to_steps(playerX)
-        playerStepsY = coord_to_steps(playerY)
-
-        playerOffset = coord_to_map_offset_only_terrain_no_split(playerX, playerY) 
-
-        print(f'playerOffset:{playerOffset}')
-
-        if not (playerOffset in inaccessibleTiles): break
-
-    while True:
-        enemyX = random.randint(0, 39) 
-        enemyY = random.randint(maxCoordY, 31)
-
-        enemyStepsX = coord_to_steps(enemyX)
-        enemyStepsY = coord_to_steps(enemyY)
-
-        if stageNum == 4:
-            secondEnemyX = random.randint(0, 39) 
-            secondEnemyY = random.randint(maxCoordY, 31)
-
-            secondEnemyStepsX = coord_to_steps(secondEnemyX)
-            secondEnemyStepsY = coord_to_steps(secondEnemyY)
-        else:
-            secondEnemyX = 0
-            secondEnemyY = 0
-
-            secondEnemyStepsX = 0
-            secondEnemyStepsY = 0
-
-
-        firstPosOffset = coord_to_map_offset_only_terrain_no_split(enemyX, enemyY)
-        secondPosOffset = coord_to_map_offset_only_terrain_no_split(secondEnemyX, secondEnemyY)
-
-        firstPosOk = not (firstPosOffset in inaccessibleTiles)
-        secondPosOk = not (secondPosOffset in inaccessibleTiles)
-
-        print(f'firstEnemyPosOffset: {firstPosOffset}')
-        print(f'secondEnemyPosOffset: {secondPosOffset}')
-
-        if stageNum != 4: secondPosOk = True
-        if firstPosOk and secondPosOk: break
-    
-    while True:
-        warpX = random.randint(0, 39)
-        warpY = random.randint(maxCoordY, 31)
-
-        warpStepsX = coord_to_steps(warpX)
-        warpStepsY = coord_to_steps(warpY)
-
-        warpToPosOffset = coord_to_map_offset_only_terrain_no_split(warpX, warpY)
-        print(f'warpToPosOffset:{warpToPosOffset}')
-        if not (warpToPosOffset in inaccessibleTiles) : break
-
-# Finish coding second enemy parameters, modify stage_config to take randomizer params, set values here
-    stageConfig = StageConfig (
-
-        playerStepsX,
-        playerStepsY,
-
-        enemyStepsX,
-        enemyStepsY,
-
-        secondEnemyStepsX,
-        secondEnemyStepsY,
-
-        stageInfo.stageTime,
-
-        stageInfo.playerMaxEnergy, stageInfo.playerMaxEnergy,
-        stageInfo.enemyMaxEnergy, stageInfo.enemyMaxEnergy,
-
-        warpStepsX,
-        warpStepsY
-    )
-
-    return stageConfig
-
-
-def coord_to_steps(coord):
-    return coord * 8
-
-
-def generate_events(eventType, quantity, criticalTiles, maxCoordY, tilesInMap):
-    eventList = [] 
-    tileIdxMap = {}
-
-    whitelistedItems = [
-        items.EnergyCapsule, 
-        items.DefenseItem, 
-        items.FightingSpirit, 
-        items.EnergyRefill, 
-        items.SuperRefill, 
-        items.StopTime, 
-        items.Invincibility
-    ]
-
-    trapIndex = 0
-    resuppliesAdded = 0
-    for event in range(0, quantity):
-        if eventType == events.Trap:
-            eventType = events.Trap
-            eventPayload = trapIndex 
-            trapIndex += 1
-        elif eventType == events.EnergyResupply:
-            eventType = events.EnergyResupply
-            eventPayload = resuppliesAdded
-            resuppliesAdded += 1
-        elif eventType == events.Item:
-            eventType = events.Item
-            while True:
-                eventPayload = random.randint(items.MinVal, items.MaxVal)
-                if eventPayload in (whitelistedItems): break
-        elif eventType == 'warp':
-            eventType = events.Item
-            eventPayload = items.Warp
-
-        while True:
-            xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
-            yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
-
-            currentEvent = Event(eventType, eventPayload, xPos, yPos, False)
-            newTileIdx = pad_offset(coord_to_map_offset_only_terrain_no_split(xPos, yPos), tilesInMap)
-
-            if not (newTileIdx in criticalTiles): break
-
-        tileIdxMap[newTileIdx] = True
-        eventList.append(currentEvent)
-
-    return tileIdxMap, eventList 
-            # Add events to critical tiles list
-            #eventTile = 
-            #criticalTiles.append(eventTile)
 
 
 def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
-
 
     if stageInfo.stageNumber < 3:
         numZonesInStage = 4
@@ -222,8 +53,6 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
         mapParams = MapParameters(2, 12, 10, 4, 0, 16, 1)
 
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
-
-
 
     ##########
     # Events #
@@ -269,7 +98,6 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     if stageInfo.stageNumber == 5:
         eventList.append(superBankEvent)
-
 
 
     # Log Events
@@ -364,10 +192,9 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
             inaccessibleTiles.append(pad_offset(tileIdx, stageInfo.tilesInMap))
 
     #print(f'inaccesibleTiles:{inaccessibleTiles}')
-    ####################################################################
+
     # Placing enemies - do this more efficiently later -
     # Generate list of required positions first, then assign positions
-
 
     
     enemyTypes = [
@@ -398,15 +225,13 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     #    print(coord_to_map_offset(enemy.col, enemy.row, False))
 
     print(f'Final inaccessibleTiles list:{inaccessibleTiles}')
-    stageConfig = stage_config(stageInfo.stageNumber, randomizerFlags, inaccessibleTiles, maxCoordY)
+    stageConfig = stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY)
 
     return eventList, randomMap, enemyList, stageConfig
 
 
 # patches in super energy bank tile coordinates and returns super bank coords for generate_stage() for stage 5
 def patch_super_bank(fileObj):
-    #labCol = 0x23
-    #labRow = 0x0d
     superBankX = random.randint(0, 39)
     superBankY = random.randint(0, 31)
 
@@ -556,5 +381,3 @@ for stage in stageRange:
     )
 
     patch_stage(sys.argv[1], stageInfo, stageConfig, stageData)
-
-
