@@ -38,11 +38,7 @@ class Game:
 
     NoMechaGodzillaWarpPatchRomAdr: int = 0x00c6df
 
-    # Instead of patching these completely out like this,
-    # Jump to a subroutine that initializes health, time,
-    # etc. if it's zero
-
-
+    # Note: all operands to 65c816 instructions are little-endian
     PersistentTimeCode = bytearray([
         opcodes.JmpAbs, 0x8b, 0xf5,
 
@@ -58,12 +54,12 @@ class Game:
         # If Hi Byte of Time isn't zero, don't initialize
         opcodes.LdaAbs, 0x2b, 0x0e,
         opcodes.CmpIme, 0x00,
-        opcodes.BneRel, 0x11, # decimal 17### adr of jump at end
+        opcodes.BneRel, 0x11, 
 
         # Same for Lo Byte
         opcodes.LdaAbs, 0x2b, 0x0e,
         opcodes.CmpIme, 0x00,
-        opcodes.BneRel, 0x0a, #decimal 11 ### adr of jump at end
+        opcodes.BneRel, 0x0a, 
 
         # If both bytes are zero, need to initialize time
         # Hard-coded 768 seconds for now
@@ -89,12 +85,12 @@ class Game:
         # If Hi Byte of Energy isn't zero, don't initialize
         opcodes.LdaAbs, 0x71, 0x0e,
         opcodes.CmpIme, 0x00,
-        opcodes.BneRel, 0x13, # decimal 19### adr of jump at end
+        opcodes.BneRel, 0x13,
 
         # Same for Lo Byte
         opcodes.LdaAbs, 0x72, 0x0e,
         opcodes.CmpIme, 0x00,
-        opcodes.BneRel, 0x0c, #decimal 13 ### adr of jump at end
+        opcodes.BneRel, 0x0c,
 
         # Didn't branch, need to initizlize energy
         opcodes.LdaAbs, 0x73, 0x0e,
