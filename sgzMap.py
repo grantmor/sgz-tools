@@ -252,6 +252,8 @@ def merge_event_list_map_data(mapData, eventList, insertSpecialEnergy, palettesP
 
 
 def merge_enemy_list_map_data(mapData, enemyList, palettesPresent, stdPalettes):
+
+    #print(f'before merging enemies:{mapData}')
     enemyMapData = []
 
     # Mutating input is lava
@@ -265,6 +267,8 @@ def merge_enemy_list_map_data(mapData, enemyList, palettesPresent, stdPalettes):
     for enemy in enemyList:
         enemyPositionMap[coord_to_map_offset_region_split(enemy.col, enemy.row, palettesPresent)] = enemy.type
     
+    print(f'enemyPositionMap:{enemyPositionMap}')
+    
     tileIdx = 0
     while tileIdx < len(enemyMapData):
         if tileIdx in enemyPositionMap:
@@ -273,6 +277,7 @@ def merge_enemy_list_map_data(mapData, enemyList, palettesPresent, stdPalettes):
                 enemyMapData[tileIdx + 1] = palettes.Enemy
         tileIdx += tileStride
     
+    #print(f'after merging enemies:{enemyMapData}')
     return enemyMapData
 
 

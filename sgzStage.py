@@ -156,7 +156,7 @@ def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPre
     #print(f'bRegionTerrainOffset:{bRegionTerrainOffset}')
     # Compress Enemy Data - Unfortunately, this mutates mapData - will need to figure out how to deep copy later...
     mapEnemyData = merge_enemy_list_map_data(mapEventData, enemyInput, palettesPresent, stdPalettes) 
-    bRegionEnemyOffset, compressedEnemyData  = compress_map_data(mapEventData, stdPalettes, True)
+    bRegionEnemyOffset, compressedEnemyData  = compress_map_data(mapEnemyData, stdPalettes, True)
 
     # Computing pointers to map data
     aRegionPointer = stage.mapBasePtr
