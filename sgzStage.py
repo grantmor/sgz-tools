@@ -181,7 +181,6 @@ def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPre
     return data
 
 
-
 def patch_enemy_pos_instructions(fileObj, hPos, vPos, hAdr, vAdr):
     # This works, but is this the right opcode???
     lda = 0xa2

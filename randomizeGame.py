@@ -272,13 +272,12 @@ def patch_super_bank(fileObj):
 ######################
 # *** Randomize! *** #
 ######################
-def randomize_game():
+def randomize_game(filePath, randomizerFlags):
     # Randomizer Flags (arguments later)
-    randomizerFlags = RandomizerFlags(True, True, True, True, True, True, True)
 
     # Patch Game
     patch_features(
-        sys.argv[1],
+        filePath,
         randomizerFlags.PersistentTime,
         randomizerFlags.PersistentEnergy,
         randomizerFlags.NoMechaGodzillaWarp,
@@ -340,7 +339,7 @@ def randomize_game():
     # Handling Stage 6 Manually for now
     # MUST BE DONE BEFORE PATCHING OTHER STAGES TO GET SUPER BANK POSITION
 
-    rom = open(sys.argv[1], 'r+b')
+    rom = open(filePath, 'r+b')
 
     # Randomize Bagan's Location
     enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
@@ -399,6 +398,7 @@ def randomize_game():
 
             if eventMapDataOk and enemyMapDataOk: break
 
-        patch_stage(sys.argv[1], stageInfo, stageConfig, stageData)
+        patch_stage(filePath, stageInfo, stageConfig, stageData)
 
-randomize_game()
+#randomizerFlags = RandomizerFlags(True, True, True, True, True, True, True)
+#randomize_game(sys.argv[1], randomizerFlags)
