@@ -83,15 +83,22 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     # Items
     itemTiles, itemEvents = generate_events(events.Item, mapParams.numItems, criticalTiles, maxCoordY, stageInfo.tilesInMap)
     criticalTiles.update(itemTiles)
+    print(f'criticalTiles after Items: {criticalTiles}')
+
     # Resupplies
     resupplyTiles, resupplyEvents = generate_events(events.EnergyResupply, mapParams.numResupplies, criticalTiles, maxCoordY, stageInfo.tilesInMap)
     criticalTiles.update(resupplyTiles)
+    print(f'criticalTiles after Resupplies: {criticalTiles}')
+
     # Traps
     trapTiles, trapEvents = generate_events(events.Trap, mapParams.numTraps, criticalTiles, maxCoordY, stageInfo.tilesInMap)
     criticalTiles.update(trapTiles)
+    print(f'criticalTiles after Traps: {criticalTiles}')
+
     # Warp
     warpTiles, warpEvents = generate_events('warp', mapParams.numWarps, criticalTiles, maxCoordY, stageInfo.tilesInMap)
     criticalTiles.update(warpTiles)
+    print(f'criticalTiles after Warps: {criticalTiles}')
 
     eventList = itemEvents + resupplyEvents + trapEvents + warpEvents
 
@@ -204,6 +211,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     enemyList = []
 
+    print(f'randomizerFlags.noEnemySpawnEvent:{randomizerFlags.NoEnemySpawnEvent}')
     for enemyType in enemyTypes:
         for enemy in range(0, mapParams.numEnemies // len(enemyTypes)):
             while True:
@@ -214,8 +222,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
                 #print(f'xPos, YPos: {xPos},{yPos}') 
                 #print(f'Offset: {coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap)}')
                 #print(f'criticalTiles: {criticalTiles}')
-                if not (coord_to_map_offset_only_terrain_no_split(xPos, yPos) in criticalTiles):
-                    break
+                if not (pad_offset(coord_to_map_offset_only_terrain_no_split(xPos, yPos), stageInfo.tilesInMap) in criticalTiles): break
 
             enemyList.append(EnemyUnit(enemyType, xPos, yPos))
     
@@ -278,127 +285,124 @@ def randomize_game(filePath, randomizerFlags):
     # Patch Game
     patch_features(
         filePath,
-        randomizerFlags.PersistentTime,
-        randomizerFlags.PersistentEnergy,
-        randomizerFlags.NoMechaGodzillaWarp,
-        randomizerFlags.NoStartingContinues,
-        randomizerFlags.NoAddedContinues
+        randomizerFlags
     )
 
-    # Standard Palettes
-    urbanPalette = {
-        tiles.Ground: palettes.Map,
+    if randomizerFlags.RandomizeMaps:
+        # Standard Palettes
+        urbanPalette = {
+            tiles.Ground: palettes.Map,
 
-        tiles.UrbanGround: palettes.Map,
-        tiles.SpecialGround: palettes.Map,
+            tiles.UrbanGround: palettes.Map,
+            tiles.SpecialGround: palettes.Map,
 
-        tiles.Sea: palettes.Blue,
-        tiles.DeepSea: palettes.Blue,
+            tiles.Sea: palettes.Blue,
+            tiles.DeepSea: palettes.Blue,
 
-        tiles.Building: palettes.Map,
-        tiles.SkyScraper: palettes.Map,
+            tiles.Building: palettes.Map,
+            tiles.SkyScraper: palettes.Map,
 
-        tiles.ResupplyBase: palettes.Blue,
-        tiles.ItemPoint: palettes.Yellow,
-        tiles.AreaPoint: palettes.Orange,
+            tiles.ResupplyBase: palettes.Blue,
+            tiles.ItemPoint: palettes.Yellow,
+            tiles.AreaPoint: palettes.Orange,
 
-        tiles.SpecialEnergy: palettes.Blue,
+            tiles.SpecialEnergy: palettes.Blue,
 
-        tiles.Mothership : palettes.UFO,
+            tiles.Mothership : palettes.UFO,
 
-        enemies.Tank: palettes.Enemy,
-        enemies.Missle: palettes.Enemy,
-        enemies.Mine: palettes.Enemy
-    }
+            enemies.Tank: palettes.Enemy,
+            enemies.Missle: palettes.Enemy,
+            enemies.Mine: palettes.Enemy
+        }
 
-    ruralPalette = {
-        tiles.Ground: palettes.Green,
+        ruralPalette = {
+            tiles.Ground: palettes.Green,
 
-        tiles.RuralGround: palettes.Green,
-        tiles.SpecialGround: palettes.Green,
+            tiles.RuralGround: palettes.Green,
+            tiles.SpecialGround: palettes.Green,
 
-        tiles.Sea: palettes.Blue,
-        tiles.DeepSea: palettes.Blue,
+            tiles.Sea: palettes.Blue,
+            tiles.DeepSea: palettes.Blue,
 
-        tiles.Mountain: palettes.Green,
-        tiles.RockyMountain: palettes.Green,
+            tiles.Mountain: palettes.Green,
+            tiles.RockyMountain: palettes.Green,
 
-        tiles.ResupplyBase: palettes.Blue,
-        tiles.ItemPoint: palettes.Yellow,
-        tiles.AreaPoint: palettes.Orange,
+            tiles.ResupplyBase: palettes.Blue,
+            tiles.ItemPoint: palettes.Yellow,
+            tiles.AreaPoint: palettes.Orange,
 
-        tiles.SpecialEnergy: palettes.Blue,
+            tiles.SpecialEnergy: palettes.Blue,
 
-        tiles.Mothership: palettes.UFO,
+            tiles.Mothership: palettes.UFO,
 
-        enemies.Tank: palettes.Enemy,
-        enemies.Missle: palettes.Enemy,
-        enemies.Mine: palettes.Enemy
-    }
+            enemies.Tank: palettes.Enemy,
+            enemies.Missle: palettes.Enemy,
+            enemies.Mine: palettes.Enemy
+        }
 
-    # Handling Stage 6 Manually for now
-    # MUST BE DONE BEFORE PATCHING OTHER STAGES TO GET SUPER BANK POSITION
+        # Handling Stage 6 Manually for now
+        # MUST BE DONE BEFORE PATCHING OTHER STAGES TO GET SUPER BANK POSITION
 
-    rom = open(filePath, 'r+b')
+        rom = open(filePath, 'r+b')
 
-    # Randomize Bagan's Location
-    enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
-    enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
+        # Randomize Bagan's Location
+        enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
+        enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
 
-    hInstructionAdr = 0xe067
-    vInstructionAdr = 0xe06d
+        hInstructionAdr = 0xe067
+        vInstructionAdr = 0xe06d
 
-    patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
-    superBank = patch_super_bank(rom)
+        patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
+        superBank = patch_super_bank(rom)
 
-    rom.close()
+        rom.close()
 
 
-    # Patching Stages
-    numStages = 5
-    stageRange = range(1, numStages + 1)
+        # Patching Stages
+        numStages = 5
+        stageRange = range(1, numStages + 1)
 
-    for stage in stageRange:
-        stageInfo = stage_info(stage)
+        for stage in stageRange:
+            stageInfo = stage_info(stage)
 
-        # Move this into stage eventually
-        if stage == 2 or stage == 3:
-            stdPalettes = ruralPalette
-        else:
-            stdPalettes = urbanPalette 
+            # Move this into stage eventually
+            if stage == 2 or stage == 3:
+                stdPalettes = ruralPalette
+            else:
+                stdPalettes = urbanPalette 
 
-        # Loop until generated stage is small enough
-        mapsGenerated = 0
-        while True:
-            mapsGenerated += 1
-            eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, superBank, stdPalettes)
+            # Loop until generated stage is small enough
+            mapsGenerated = 0
+            while True:
+                mapsGenerated += 1
+                eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, superBank, stdPalettes)
 
-            #print_uncompressed_map_data(randomMap)
+                #print_uncompressed_map_data(randomMap)
 
-            stageData = pack_stage(
-                stageInfo, 
-                eventList, 
-                randomMap,
-                enemyList, 
-                stdPalettes, 
-                True
-            )
+                stageData = pack_stage(
+                    stageInfo, 
+                    eventList, 
+                    randomMap,
+                    enemyList, 
+                    stdPalettes, 
+                    True
+                )
 
-            print()
-            print(f'Stage: {stageInfo.stageNumber}')
-            print(f'curMapDataSize: {len(stageData.mapData)}')
-            print(f'Max map size for this stage: {stageInfo.terrainSize}')
-            print(f'curEnemyDataSize: {len(stageData.enemyData)}')
-            print(f'Max enemy size for this stage: {stageInfo.enemySize}')
-            print(f'Maps generated: {mapsGenerated}')
-            print()
+                print()
+                print(f'Stage: {stageInfo.stageNumber}')
+                print(f'curMapDataSize: {len(stageData.mapData)}')
+                print(f'Max map size for this stage: {stageInfo.terrainSize}')
+                print(f'curEnemyDataSize: {len(stageData.enemyData)}')
+                print(f'Max enemy size for this stage: {stageInfo.enemySize}')
+                print(f'Maps generated: {mapsGenerated}')
+                print()
 
-            eventMapDataOk = (len(stageData.mapData) <= stageInfo.terrainSize)
-            enemyMapDataOk = (len(stageData.enemyData) <= stageInfo.enemySize)
+                eventMapDataOk = (len(stageData.mapData) <= stageInfo.terrainSize)
+                enemyMapDataOk = (len(stageData.enemyData) <= stageInfo.enemySize)
 
-            if eventMapDataOk and enemyMapDataOk: break
+                if eventMapDataOk and enemyMapDataOk: break
 
-        patch_stage(filePath, stageInfo, stageConfig, stageData)
+            patch_stage(filePath, stageInfo, stageConfig, stageData)
 
 #randomizerFlags = RandomizerFlags(True, True, True, True, True, True, True)
 #randomize_game(sys.argv[1], randomizerFlags)

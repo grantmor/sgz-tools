@@ -20,6 +20,7 @@ opcodes = Opcodes()
 
 @dataclass(frozen=True)
 class RandomizerFlags:
+    RandomizeMaps: bool
     PersistentEnergy: bool
     PersistentTime: bool
     NoEnemySpawnCritical: bool
@@ -120,11 +121,11 @@ class Game:
 
 game = Game()
 
-def patch_features(romPath, pTime, pEnergy, noWarp, noStartContinues, noAddContinues):
+def patch_features(romPath, randomizerFlags):
     rom = open(romPath, 'r+b')
 
     # Patch Persistent Time
-    if pTime:
+    if randomizerFlags.PersistentTime:
         # Jump to Time Sub
         rom.seek(game.PersistentTimePatchRomAdr)
         rom.write(game.PersistentTimeCode)
@@ -134,7 +135,7 @@ def patch_features(romPath, pTime, pEnergy, noWarp, noStartContinues, noAddConti
         rom.write(game.PersistentTimeSub)
 
     # Patch Persistent Energy
-    if pEnergy:
+    if randomizerFlags.PersistentEnergy:
         # Jump to Energy Sub
         rom.seek(game.PersistentEnergyPatchRomAdr)
         rom.write(game.PersistentEnergyCode)
@@ -144,17 +145,17 @@ def patch_features(romPath, pTime, pEnergy, noWarp, noStartContinues, noAddConti
         rom.write(game.PersistentEnergySub)
 
     # Patch No Warp
-    if noWarp:
+    if randomizerFlags.NoMechaGodzillaWarp:
         rom.seek(game.NoMechaGodzillaWarpPatchRomAdr)
         rom.write(game.NoWarpCode)
 
     # Patch No Starting Continues
-    if noStartContinues:
+    if randomizerFlags.NoStartingContinues:
         rom.seek(0x1024)
         rom.write(game.NoStartContinueInstruction)
 
     # Patch No Added Continues
-    if noAddContinues:
+    if randomizerFlags.NoAddedContinues:
         rom.seek(0x3e52)
         rom.write(game.NoAddedContinueInstruction)
 
