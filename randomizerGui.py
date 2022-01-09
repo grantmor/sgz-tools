@@ -16,15 +16,6 @@ def open_rom():
     openRomLabel['state'] = DISABLED
 
 def patch_rom():
-    print(f'RandomMaps:{randomMaps.get()}')
-    print(f'PersistentEnergy:{randomMaps.get()}')
-    print(f'PersistentTime:{randomMaps.get()}')
-    print(f'Critical Tile Logic:{randomMaps.get()}')
-    print(f'General Event Logic:{randomMaps.get()}')
-    print(f'MechaG Warp Disable:{randomMaps.get()}')
-    print(f'No Starting Continues:{randomMaps.get()}')
-    print(f'No Added Continues:{randomMaps.get()}')
-    
     timeValue = int(timeLimitField.get())
     if timeValue < 0:
         timeValue = 0
