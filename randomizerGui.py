@@ -34,7 +34,6 @@ def patch_rom():
         noAddedContinues.get()
     )
 
-    print(f'romPath.get():{openRomLabel.get("1.0", END)}')
     romPath = openRomLabel.get("1.0", END).strip()
     randomize_game(romPath, randomizerFlags)
     window.destroy()

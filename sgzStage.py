@@ -258,7 +258,7 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
         enemyPositionBuffer += enemyVerticalPos
         enemyPositionBuffer += enemyHorizontalPos
         enemyPositionBuffer += enemyVerticalPos
-        enemyPositionBuffer += bytes([0x03]) # Need to debug more to know what the last byte is used for
+        enemyPositionBuffer += bytes([0x03]) # Need to debug more to determine what the last byte is used for
 
         rom.seek(stageInfo.baseEnemyPosRomAdr)
         rom.write(enemyPositionBuffer)

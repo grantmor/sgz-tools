@@ -267,7 +267,7 @@ def merge_enemy_list_map_data(mapData, enemyList, palettesPresent, stdPalettes):
     for enemy in enemyList:
         enemyPositionMap[coord_to_map_offset_region_split(enemy.col, enemy.row, palettesPresent)] = enemy.type
     
-    print(f'enemyPositionMap:{enemyPositionMap}')
+    #print(f'enemyPositionMap:{enemyPositionMap}')
     
     tileIdx = 0
     while tileIdx < len(enemyMapData):

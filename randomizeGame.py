@@ -9,24 +9,6 @@ from sgzType import *
 from sgzStage import *
 from sgzMap import *
 
-# TODO: Finish movement randomization for all bosses (currently only MG)
-# TODO: Refactor - Split Map and Stage functionality
-# TODO: Power lines
-
-# TODO: Figure out a way to initialize time, energy
-# TODO: Make energy, time, inventory persistent
-# TODO: Seek and destroy continues
-
-# TODO: Voronoi for rural areas, grid pattern for cities
-# TODO: Third pass for "impassables"
-# TODO: Sprinkle in stuff in "Empty Zones"?
-
-# TODO: MVP
-#   - Some tiles appear to be placed by the engine... need to make sure not to place tiles there    
-# 1) Basic unmovable obstacles / mine lines / electric lines
-# 2) Refactor to handle verification of level size
-# 3) Parameterize instruction patching
-
 
 def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
@@ -85,22 +67,22 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     # Items
     itemTiles, itemEvents = generate_events(events.Item, mapParams.numItems, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(itemTiles)
-    print(f'criticalTiles after Items: {criticalTiles}')
+    #print(f'criticalTiles after Items: {criticalTiles}')
 
     # Resupplies
     resupplyTiles, resupplyEvents = generate_events(events.EnergyResupply, mapParams.numResupplies, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(resupplyTiles)
-    print(f'criticalTiles after Resupplies: {criticalTiles}')
+    #print(f'criticalTiles after Resupplies: {criticalTiles}')
 
     # Traps
     trapTiles, trapEvents = generate_events(events.Trap, mapParams.numTraps, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(trapTiles)
-    print(f'criticalTiles after Traps: {criticalTiles}')
+    #print(f'criticalTiles after Traps: {criticalTiles}')
 
     # Warp
     warpTiles, warpEvents = generate_events('warp', mapParams.numWarps, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(warpTiles)
-    print(f'criticalTiles after Warps: {criticalTiles}')
+    #print(f'criticalTiles after Warps: {criticalTiles}')
 
     eventList = itemEvents + resupplyEvents + trapEvents + warpEvents
 
@@ -210,7 +192,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     enemyList = []
 
-    print(f'randomizerFlags.noEnemySpawnEvent:{randomizerFlags.NoEnemySpawnEvent}')
+    #print(f'randomizerFlags.noEnemySpawnEvent:{randomizerFlags.NoEnemySpawnEvent}')
     for enemyType in enemyTypes:
         for enemy in range(0, mapParams.numEnemies // len(enemyTypes)):
             while True:
@@ -387,14 +369,14 @@ def randomize_game(filePath, randomizerFlags):
                     True
                 )
 
-                print()
-                print(f'Stage: {stageInfo.stageNumber}')
-                print(f'curMapDataSize: {len(stageData.mapData)}')
-                print(f'Max map size for this stage: {stageInfo.terrainSize}')
-                print(f'curEnemyDataSize: {len(stageData.enemyData)}')
-                print(f'Max enemy size for this stage: {stageInfo.enemySize}')
-                print(f'Maps generated: {mapsGenerated}')
-                print()
+                #print()
+                #print(f'Stage: {stageInfo.stageNumber}')
+                #print(f'curMapDataSize: {len(stageData.mapData)}')
+                #print(f'Max map size for this stage: {stageInfo.terrainSize}')
+                #print(f'curEnemyDataSize: {len(stageData.enemyData)}')
+                #print(f'Max enemy size for this stage: {stageInfo.enemySize}')
+                #print(f'Maps generated: {mapsGenerated}')
+                #print()
 
                 eventMapDataOk = (len(stageData.mapData) <= stageInfo.terrainSize)
                 enemyMapDataOk = (len(stageData.enemyData) <= stageInfo.enemySize)
@@ -402,6 +384,3 @@ def randomize_game(filePath, randomizerFlags):
                 if eventMapDataOk and enemyMapDataOk: break
 
             patch_stage(filePath, stageInfo, stageConfig, stageData)
-
-#randomizerFlags = RandomizerFlags(True, True, True, True, True, True, True)
-#randomize_game(sys.argv[1], randomizerFlags)
