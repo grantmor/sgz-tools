@@ -2,7 +2,6 @@ import sys
 import random
 
 from perlin_noise import *
-import matplotlib.pyplot as plot
 
 from sgzConst import *
 from sgzGame import *
@@ -72,31 +71,34 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     criticalTiles = {}
 
+    # Choose a more appropriate tile later
+    baseTerrainType = tiles.SpecialGround
+
     for val in mothershipOffsets.values():
         criticalTiles[val] = True
 
     if stageInfo.stageNumber == 5:
-        superBankEvent = Event(events.Trap, 0x00, superBank.xPos, superBank.yPos, True)
+        superBankEvent = Event(events.Trap, 0x00, superBank.xPos, superBank.yPos, baseTerrainType, True)
         superBankOffset = coord_to_map_offset_only_terrain_no_split(superBank.xPos, superBank.yPos)
         criticalTiles[superBankOffset] = True
         
     # Items
-    itemTiles, itemEvents = generate_events(events.Item, mapParams.numItems, criticalTiles, maxCoordY, stageInfo.tilesInMap)
+    itemTiles, itemEvents = generate_events(events.Item, mapParams.numItems, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(itemTiles)
     print(f'criticalTiles after Items: {criticalTiles}')
 
     # Resupplies
-    resupplyTiles, resupplyEvents = generate_events(events.EnergyResupply, mapParams.numResupplies, criticalTiles, maxCoordY, stageInfo.tilesInMap)
+    resupplyTiles, resupplyEvents = generate_events(events.EnergyResupply, mapParams.numResupplies, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(resupplyTiles)
     print(f'criticalTiles after Resupplies: {criticalTiles}')
 
     # Traps
-    trapTiles, trapEvents = generate_events(events.Trap, mapParams.numTraps, criticalTiles, maxCoordY, stageInfo.tilesInMap)
+    trapTiles, trapEvents = generate_events(events.Trap, mapParams.numTraps, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(trapTiles)
     print(f'criticalTiles after Traps: {criticalTiles}')
 
     # Warp
-    warpTiles, warpEvents = generate_events('warp', mapParams.numWarps, criticalTiles, maxCoordY, stageInfo.tilesInMap)
+    warpTiles, warpEvents = generate_events('warp', mapParams.numWarps, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(warpTiles)
     print(f'criticalTiles after Warps: {criticalTiles}')
 
@@ -131,9 +133,6 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
             for stretch in range(0, mapParams.horizontalStretchFactor):
                 row.append(noiseVal)
         bitmap.append(row)
-
-    #plot.imshow(bitmap, cmap='gray')
-    #plot.show()
 
     randomMap = bytearray()
 

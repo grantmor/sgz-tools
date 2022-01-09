@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from sgzLogic import *
 
 @dataclass(frozen=True)
 class Opcodes:
@@ -20,6 +21,7 @@ opcodes = Opcodes()
 
 @dataclass(frozen=True)
 class RandomizerFlags:
+    TimeLimit: int
     RandomizeMaps: bool
     PersistentEnergy: bool
     PersistentTime: bool
@@ -29,7 +31,8 @@ class RandomizerFlags:
     NoStartingContinues: bool
     NoAddedContinues: bool
 
-@dataclass(frozen=True)
+# Can't be frozen, need to supply time (and possible energy at runtime)
+@dataclass
 class Game:
     PersistentTimePatchRomAdr: int = 0x00d059
     PersistentEnergyPatchRomAdr: int = 0x00d0b3
@@ -63,7 +66,7 @@ class Game:
         opcodes.BneRel, 0x0a, 
 
         # If both bytes are zero, need to initialize time
-        # Hard-coded 768 seconds for now
+        # Default is 768, but this is replaced by user
         opcodes.LdaIme, 0x00,
         opcodes.StaAbs, 0x2b, 0x0e,
         opcodes.LdaIme, 0x03,
@@ -129,6 +132,13 @@ def patch_features(romPath, randomizerFlags):
         # Jump to Time Sub
         rom.seek(game.PersistentTimePatchRomAdr)
         rom.write(game.PersistentTimeCode)
+
+        # Modify time
+        timeLoByteOperandOffset = 29
+        timeHiByteOperandOffset = 34
+        timeBytes = int_to_16_le(randomizerFlags.TimeLimit)
+        game.PersistentTimeSub[timeLoByteOperandOffset] = timeBytes[0]
+        game.PersistentTimeSub[timeHiByteOperandOffset] = timeBytes[1]
 
         # Time Sub
         rom.seek(0xf58b)

@@ -139,7 +139,7 @@ def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPre
         eventData.append(event.payload)
         eventData.append(event.col)
         eventData.append(event.row)
-        eventData.append(event.pen)
+        eventData.append(event.terrainType)
         eventData.append(event.last)
 
     # Insert Special Energy in Stage 5

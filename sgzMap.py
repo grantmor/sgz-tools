@@ -343,7 +343,7 @@ def coord_to_steps(coord):
     return coord * 8
 
 
-def generate_events(eventType, quantity, criticalTiles, maxCoordY, tilesInMap):
+def generate_events(eventType, quantity, criticalTiles, maxCoordY, terrainType, tilesInMap):
     eventList = [] 
     tileIdxMap = {}
 
@@ -381,7 +381,7 @@ def generate_events(eventType, quantity, criticalTiles, maxCoordY, tilesInMap):
             xPos = random.randint(0, engine.TilesInRow * engine.RegionsInZone - 1)
             yPos = random.randint(maxCoordY, engine.RowsPerZone * engine.MaxZones // 2 - 1) # Level height in zones
 
-            currentEvent = Event(eventType, eventPayload, xPos, yPos, False)
+            currentEvent = Event(eventType, eventPayload, xPos, yPos, terrainType, False)
             newTileIdx = pad_offset(coord_to_map_offset_only_terrain_no_split(xPos, yPos), tilesInMap)
 
             if not (newTileIdx in criticalTiles): break

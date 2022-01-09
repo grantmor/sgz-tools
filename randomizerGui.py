@@ -24,8 +24,15 @@ def patch_rom():
     print(f'MechaG Warp Disable:{randomMaps.get()}')
     print(f'No Starting Continues:{randomMaps.get()}')
     print(f'No Added Continues:{randomMaps.get()}')
+    
+    timeValue = int(timeLimitField.get())
+    if timeValue < 0:
+        timeValue = 0
+    elif timeValue > 999:
+        timeValue = 999
 
     randomizerFlags = RandomizerFlags(
+        timeValue,
         randomMaps.get(),
         persistentEnergy.get(),
         persistentTime.get(),
@@ -39,11 +46,13 @@ def patch_rom():
     print(f'romPath.get():{openRomLabel.get("1.0", END)}')
     romPath = openRomLabel.get("1.0", END).strip()
     randomize_game(romPath, randomizerFlags)
+    window.destroy()
+
 
 window = Tk()
 window.option_add('*Font', '32')
 
-#romPath = StringVar()
+defaultTimeLimit = 768
 
 randomMaps = BooleanVar()
 persistentTime = BooleanVar()
@@ -52,12 +61,25 @@ noStartingContinues = BooleanVar()
 noAddedContinues = BooleanVar()
 filename = StringVar()
 
+# Default to standard options
+randomMaps.set(True)
+persistentTime.set(True)
+persistentEnergy.set(True)
+noStartingContinues.set(True)
+noAddedContinues.set(True)
+
 openRomButton = Button(window, text="Select Rom (Only US Version 1.1 Currently Supported)", command=open_rom)
 openRomButton.place(x=32, y=32)
 
 openRomLabel = Text(window, height=1, width=76, state='disabled')
-openRomLabel.place(x=32, y=72)
+openRomLabel.place(x=32, y=64)
 
+timeLimitLabel = Label(window, text="Time Limit:")
+timeLimitLabel.place(x=40, y=100)
+
+timeLimitField = Entry(window, width=5) #state='disabled')
+timeLimitField.place(x=128, y=96)
+timeLimitField.insert(0, defaultTimeLimit)
 
 ptCheck = Checkbutton(window, text='Persistent Time', variable=persistentTime)
 ptCheck.place(x=32, y=128)
@@ -78,7 +100,7 @@ patchButton = Button(window, text="Patch Rom!", command = patch_rom)
 patchButton.place(x=32, y=320)
 
 
-window.title('Super Godzilla: Final Weapon')
+window.title('Super Godzilla Randomizer')
 window.geometry('768x384+16+16')
 
 window.mainloop()

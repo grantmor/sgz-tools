@@ -3,14 +3,14 @@ from sgzConst import *
 
 
 class Event:
-    def __init__(self, eventType, payload, col, row, terrainMod):
+    def __init__(self, eventType, payload, col, row, terrainType, terrainMod):
         self.first = 0x02
         self.type = eventType
         self.payload = payload
         self.col = col
         self.row = row
 
-        self.pen = 0xf1
+        self.terrainType = terrainType
         self.last = 0x00
 
         self.noTerrainModification = terrainMod
