@@ -19,7 +19,7 @@ pip install perlin_noise
 ```sh
 git clone https://github.com/grantmor/sgz-tools.git
 cd sgz-tools
-./randomizerGui.py
+python ./randomizerGui.py
 ```
 NOTE: If you receive an error message similar to:
 ```
