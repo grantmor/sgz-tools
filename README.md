@@ -27,4 +27,4 @@ NOTE: If you receive an error message similar to:
 ```
 ImportError: cannot import name 'Iterable' from 'collections' (<filename>)
 ```
-This issue can be worked around by changing the import line in the perlin_noise.py file you installed earlier to refer to 'collections.abc' in place of 'collections'
+This issue can be worked around by changing the import line in the perlin_noise.py file you installed earlier to refer to 'collections.abc' instead of 'collections'
