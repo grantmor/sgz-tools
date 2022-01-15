@@ -231,6 +231,12 @@ class Stage:
 
 
 @dataclass(frozen=True)
+class Patch:
+    address: int
+    data: bytearray
+
+
+@dataclass(frozen=True)
 class StageConfig:
     playerPosX: int
     playerPosY: int

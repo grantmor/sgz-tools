@@ -29,8 +29,10 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
         mapParams = MapParameters(2, 8, 4, 2, 0, 24, 1)
     elif stageInfo.stageNumber == 3:
         mapParams = MapParameters(2, 10, 8, 3, 6, 48, 1)
-    else: 
+    elif stageInfo.stageNumber == 4: 
         mapParams = MapParameters(2, 12, 10, 4, 0, 48, 1)
+    elif stageInfo.stageNumber == 5: 
+        mapParams = MapParameters(2, 12, 10, 3, 0, 48, 1)
 
     xTiles, yTiles = engine.TilesInRow * 2, stageInfo.playableZones // 2 * engine.RowsPerZone 
 
@@ -220,7 +222,9 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
 
 # patches in super energy bank tile coordinates and returns super bank coords for generate_stage() for stage 5
-def patch_super_bank(fileObj):
+def patch_super_bank():
+    patchList = []
+
     superBankX = random.randint(0, 39)
     superBankY = random.randint(0, 31)
 
@@ -248,26 +252,40 @@ def patch_super_bank(fileObj):
     bankXPosInstruction = bytes([ldx]) + int_to_16_le(xSuperBankBytes)
     bankYPosInstruction = bytes([ldy]) + int_to_16_le(ySuperBankBytes)
 
-    fileObj.seek(xAdr)
-    fileObj.write(bankXPosInstruction)
+    #fileObj.seek(xAdr)
+    #fileObj.write(bankXPosInstruction)
+    patchList.append(
+        Patch(
+            xAdr,
+            bankXPosInstruction
+        )
+    )
 
-    fileObj.seek(yAdr)
-    fileObj.write(bankYPosInstruction)
+    #fileObj.seek(yAdr)
+    #fileObj.write(bankYPosInstruction)
+    patchList.append(
+        Patch(
+            yAdr,
+            bankYPosInstruction
+        )
+    )
 
-    return  superBank
+    return  superBank, patchList
 
 
-######################
-# *** Randomize! *** #
-######################
 def randomize_game(filePath, randomizerFlags):
+    patchList = []
+
     # Randomizer Flags (arguments later)
 
     # Patch Game
-    patch_features(
+    patchList += patch_features(
         filePath,
         randomizerFlags
     )
+
+    # Debug
+    print(f'patchList after features:{patchList}')
 
     if randomizerFlags.RandomizeMaps:
         # Standard Palettes
@@ -324,7 +342,7 @@ def randomize_game(filePath, randomizerFlags):
         # Handling Stage 6 Manually for now
         # MUST BE DONE BEFORE PATCHING OTHER STAGES TO GET SUPER BANK POSITION
 
-        rom = open(filePath, 'r+b')
+        #rom = open(filePath, 'r+b')
 
         # Randomize Bagan's Location
         enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
@@ -333,10 +351,10 @@ def randomize_game(filePath, randomizerFlags):
         hInstructionAdr = 0xe067
         vInstructionAdr = 0xe06d
 
-        patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
-        superBank = patch_super_bank(rom)
-
-        rom.close()
+        patchList += patch_enemy_pos_instructions(enemyHorizontalPos, enemyVerticalPos, hInstructionAdr, vInstructionAdr)
+        superBank, superBankPatch = patch_super_bank()
+        
+        patchList += superBankPatch
 
 
         # Patching Stages
@@ -383,4 +401,36 @@ def randomize_game(filePath, randomizerFlags):
 
                 if eventMapDataOk and enemyMapDataOk: break
 
-            patch_stage(filePath, stageInfo, stageConfig, stageData)
+            patchList += patch_stage(filePath, stageInfo, stageConfig, stageData)
+    
+    write_ips_file('SuperGodzillaRandomizerPatch.ips', patchList) 
+
+
+def write_ips_file(fileName, patchList):
+    ipsData = bytearray()
+
+    magicNo = bytes([0x50, 0x41, 0x54, 0x43, 0x48])
+    endOfFile = bytes([0x45, 0x4f, 0x46])
+
+    ipsData += magicNo
+
+    for patch in patchList:
+        ipsData += patch.address.to_bytes(3, 'big')
+
+        if type(patch.data) == int:
+            dataSize = 1
+        else:
+            dataSize = len(patch.data)
+
+        ipsData += dataSize.to_bytes(2, 'big')
+
+        if type(patch.data) == int:
+            ipsData += bytes([patch.data])
+        else:
+            ipsData += patch.data
+
+    ipsData += endOfFile
+
+    ipsFile = open(fileName, 'w+b')
+    ipsFile.write(ipsData)
+    ipsFile.close()
