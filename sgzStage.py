@@ -210,7 +210,7 @@ def patch_enemy_pos_instructions(hPos, vPos, hAdr, vAdr):
     return patchList
 
 
-def patch_stage(romPath, stageInfo, stageConfig, stageData):
+def patch_stage(gameVersion, stageInfo, stageConfig, stageData):
     patchList = []
 
     # Write Stage Terrain Region Pointers

@@ -126,7 +126,7 @@ class Game:
 game = Game()
 
 
-def patch_features(romPath, randomizerFlags):
+def patch_features(gameVersion, randomizerFlags):
     patchList = []
     #rom = open(romPath, 'r+b')
 

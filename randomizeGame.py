@@ -273,14 +273,14 @@ def patch_super_bank():
     return  superBank, patchList
 
 
-def randomize_game(filePath, randomizerFlags):
+def randomize_game(gameVersion, randomizerFlags):
     patchList = []
 
     # Randomizer Flags (arguments later)
 
     # Patch Game
     patchList += patch_features(
-        filePath,
+        gameVersion,
         randomizerFlags
     )
 
@@ -401,7 +401,7 @@ def randomize_game(filePath, randomizerFlags):
 
                 if eventMapDataOk and enemyMapDataOk: break
 
-            patchList += patch_stage(filePath, stageInfo, stageConfig, stageData)
+            patchList += patch_stage(gameVersion, stageInfo, stageConfig, stageData)
     
     write_ips_file('SuperGodzillaRandomizerPatch.ips', patchList) 
 
