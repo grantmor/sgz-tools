@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from sgzLogic import *
+from sgzType import *
 
 @dataclass(frozen=True)
 class Opcodes:
@@ -124,51 +125,101 @@ class Game:
 
 game = Game()
 
+
 def patch_features(romPath, randomizerFlags):
-    rom = open(romPath, 'r+b')
+    patchList = []
+    #rom = open(romPath, 'r+b')
 
     # Patch Persistent Time
     if randomizerFlags.PersistentTime:
         # Jump to Time Sub
-        rom.seek(game.PersistentTimePatchRomAdr)
-        rom.write(game.PersistentTimeCode)
+        #rom.seek(game.PersistentTimePatchRomAdr)
+        #rom.write(game.PersistentTimeCode)
+        patchList.append(
+            Patch(
+                game.PersistentTimePatchRomAdr, 
+                game.PersistentTimeCode
+            )
+        )
 
         # Modify time
         timeLoByteOperandOffset = 29
         timeHiByteOperandOffset = 34
         timeBytes = int_to_16_le(randomizerFlags.TimeLimit)
+
         game.PersistentTimeSub[timeLoByteOperandOffset] = timeBytes[0]
         game.PersistentTimeSub[timeHiByteOperandOffset] = timeBytes[1]
 
         # Time Sub
-        rom.seek(0xf58b)
-        rom.write(game.PersistentTimeSub)
+        #rom.seek(0xf58b)
+        #rom.write(game.PersistentTimeSub)
+
+        patchList.append(
+            Patch(
+                0xf58b, 
+                game.PersistentTimeSub
+            )
+        )
 
     # Patch Persistent Energy
     if randomizerFlags.PersistentEnergy:
         # Jump to Energy Sub
-        rom.seek(game.PersistentEnergyPatchRomAdr)
-        rom.write(game.PersistentEnergyCode)
+        #rom.seek(game.PersistentEnergyPatchRomAdr)
+        #rom.write(game.PersistentEnergyCode)
+        patchList.append(
+            Patch(
+                game.PersistentEnergyPatchRomAdr, 
+                game.PersistentEnergyCode
+            )
+        )
 
         # Energy Sub
-        rom.seek(0xf5b4)
-        rom.write(game.PersistentEnergySub)
+        #rom.seek(0xf5b4)
+        #rom.write(game.PersistentEnergySub)
+        patchList.append(
+            Patch(0xf5b4, game.PersistentEnergySub)
+        )
 
     # Patch No Warp
     if randomizerFlags.NoMechaGodzillaWarp:
-        rom.seek(game.NoMechaGodzillaWarpPatchRomAdr)
-        rom.write(game.NoWarpCode)
+        #rom.seek(game.NoMechaGodzillaWarpPatchRomAdr)
+        #rom.write(game.NoWarpCode)
+        patchList.append(
+            Patch(
+                game.NoMechaGodzillaWarpPatchRomAdr,
+                game.NoWarpCode
+            )
+        )
 
     # Patch No Starting Continues
     if randomizerFlags.NoStartingContinues:
-        rom.seek(0x1024)
-        rom.write(game.NoStartContinueInstruction)
+        #rom.seek(0x1024)
+        #rom.write(game.NoStartContinueInstruction)
+        patchList.append(
+            Patch(
+                0x1024,
+                game.NoStartContinueInstruction
+            )
+        )
 
     # Patch No Added Continues
     if randomizerFlags.NoAddedContinues:
-        rom.seek(0x3e52)
-        rom.write(game.NoAddedContinueInstruction)
+        #rom.seek(0x3e52)
+        #rom.write(game.NoAddedContinueInstruction)
+        patchList.append(
+            Patch(
+                0x3e52,
+                game.NoAddedContinueInstruction
+            )
+        )
 
-        rom.seek(0x3e5d)
-        rom.write(game.NoAddedContinueInstruction)
-    rom.close()
+        #rom.seek(0x3e5d)
+        #rom.write(game.NoAddedContinueInstruction)
+        patchList.append(
+            Patch(
+                0x3e5d,
+                game.NoAddedContinueInstruction
+            )
+        )
+
+    return patchList

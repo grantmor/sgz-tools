@@ -181,70 +181,150 @@ def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPre
     return data
 
 
-def patch_enemy_pos_instructions(fileObj, hPos, vPos, hAdr, vAdr):
+def patch_enemy_pos_instructions(hPos, vPos, hAdr, vAdr):
+    patchList = []
+
     # This works, but is this the right opcode???
     lda = 0xa2
     enemyHzInstruction = bytes([lda]) + hPos
     enemyVtInstruction = bytes([lda]) + vPos
 
-    fileObj.seek(hAdr)
-    fileObj.write(enemyHzInstruction)
+    #fileObj.seek(hAdr)
+    #fileObj.write(enemyHzInstruction)
+    patchList.append(
+        Patch(
+            hAdr, 
+            enemyHzInstruction
+        )
+    )
 
-    fileObj.seek(vAdr)
-    fileObj.write(enemyVtInstruction)
+    #fileObj.seek(vAdr)
+    #fileObj.write(enemyVtInstruction)
+    patchList.append(
+        Patch(
+            vAdr, 
+            enemyVtInstruction
+        )
+    )
+
+    return patchList
 
 
 def patch_stage(romPath, stageInfo, stageConfig, stageData):
-    rom = open(romPath, 'r+b')
+    patchList = []
 
     # Write Stage Terrain Region Pointers
-    rom.seek(stageInfo.mapPtrOffsetA)
+    #rom.seek(stageInfo.mapPtrOffsetA)
     #print(f'Stage mapPtrA:{stageData.mapPtrA}')
-    rom.write(stageData.mapPtrA)
+    #rom.write(stageData.mapPtrA)
+    patchList.append(
+        Patch(
+            stageInfo.mapPtrOffsetA, 
+            stageData.mapPtrA
+        )
+    )
 
-    rom.seek(stageInfo.mapPtrOffsetB)
+    #rom.seek(stageInfo.mapPtrOffsetB)
     #print(f'Stage mapPtrB:{stageData.mapPtrB}')
-    rom.write(stageData.mapPtrB)
-
+    #rom.write(stageData.mapPtrB)
+    patchList.append(
+        Patch(
+            stageInfo.mapPtrOffsetB, 
+            stageData.mapPtrB
+        )
+    )
+    
     # Write Stage Map Data
-    rom.seek(stageInfo.terrainOffset)
-    rom.write(stageData.mapData)
+    #rom.seek(stageInfo.terrainOffset)
+    #rom.write(stageData.mapData)
+    patchList.append(
+        Patch(
+            stageInfo.terrainOffset, 
+            stageData.mapData
+        )
+    )
 
     # Write Stage Enemy Region Pointers
-    rom.seek(stageInfo.enemyPtrOffsetA)
-    rom.write(stageData.enemyPtrA)
+    #rom.seek(stageInfo.enemyPtrOffsetA)
+    #rom.write(stageData.enemyPtrA)
+    patchList.append(
+        Patch(
+            stageInfo.enemyPtrOffsetA, 
+            stageData.enemyPtrA
+        )
+    )
 
-    rom.seek(stageInfo.enemyPtrOffsetB)
-    rom.write(stageData.enemyPtrB)
+    #rom.seek(stageInfo.enemyPtrOffsetB)
+    #rom.write(stageData.enemyPtrB)
+    patchList.append(
+        Patch(
+            stageInfo.enemyPtrOffsetB, 
+            stageData.enemyPtrB
+        )
+    )
 
     # Write Stage Enemy Data
-    rom.seek(stageInfo.enemyOffset)
-    rom.write(stageData.enemyData)
+    #rom.seek(stageInfo.enemyOffset)
+    #rom.write(stageData.enemyData)
+    patchList.append(
+        Patch(
+            stageInfo.enemyOffset, 
+            stageData.enemyData
+        )
+    )
 
     # Write Stage Event Data
-    rom.seek(stageInfo.eventOffset)
-    rom.write(stageData.eventData)
+    #rom.seek(stageInfo.eventOffset)
+    #rom.write(stageData.eventData)
+    patchList.append(
+        Patch(
+            stageInfo.eventOffset, 
+            stageData.eventData
+        )
+    )
 
     # Time
-    rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.stageTimeOffset)
+    #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.stageTimeOffset)
+    timeOffset = stageInfo.baseStatInitRomAdr + stageInfo.stageTimeOffset
     time = int_to_16_le(stageConfig.stageTime)
-    rom.write(time)
+
+    #rom.write(time)
+    patchList.append(
+        Patch(
+            timeOffset,
+            time
+        )
+    )
 
     # Player Position
     playerPositionBuffer = bytearray()
     playerPositionBuffer += int_to_16_le(stageConfig.playerPosX)
     playerPositionBuffer += bytes([stageConfig.playerPosY])
 
-    rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset)
-    rom.write(playerPositionBuffer)
+    #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset)
+    playerPositionAdr = stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset
+
+    #rom.write(playerPositionBuffer)
+    patchList.append(
+        Patch(
+            playerPositionAdr, 
+            playerPositionBuffer
+        )
+    )
 
     # Warp Table
     warpDataBuffer = bytearray() 
     warpDataBuffer += int_to_16_le(stageConfig.warpX) 
     warpDataBuffer += int_to_16_le(stageConfig.warpY)
 
-    rom.seek(stageInfo.warpTableRomAdr)
-    rom.write(warpDataBuffer)
+    #rom.seek(stageInfo.warpTableRomAdr)
+    #rom.write(warpDataBuffer)
+    patchList.append(
+        Patch(
+            stageInfo.warpTableRomAdr, 
+            warpDataBuffer
+        )
+    )
 
     # Enemy Position
 
@@ -260,17 +340,30 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
         enemyPositionBuffer += enemyVerticalPos
         enemyPositionBuffer += bytes([0x03]) # Need to debug more to determine what the last byte is used for
 
-        rom.seek(stageInfo.baseEnemyPosRomAdr)
-        rom.write(enemyPositionBuffer)
+        #rom.seek(stageInfo.baseEnemyPosRomAdr)
+        #rom.write(enemyPositionBuffer)
+        patchList.append(
+            Patch(
+                stageInfo.baseEnemyPosRomAdr, 
+                enemyPositionBuffer
+            )
+        )
 
     elif stageInfo.stageNumber == 4:
         # This part can be moved to generic block...?
+        # Battra 1
         enemyPositionBuffer = bytearray()
         enemyPositionBuffer += enemyHorizontalPos
         enemyPositionBuffer += enemyVerticalPos
 
-        rom.seek(stageInfo.baseEnemyPosRomAdr)
-        rom.write(enemyPositionBuffer)
+        #rom.seek(stageInfo.baseEnemyPosRomAdr)
+        #rom.write(enemyPositionBuffer)
+        patchList.append(
+            Patch(
+                stageInfo.baseEnemyPosRomAdr, 
+                enemyPositionBuffer
+            )
+        )
 
         # Battra 2
         enemyHorizontalPos = int_to_16_le(stageConfig.secondEnemyPosX)
@@ -278,16 +371,29 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
 
         hPosInstructionAdr = 0xe03c
         vPosInstructionAdr = 0xe042
-            
-        patch_enemy_pos_instructions(rom, enemyHorizontalPos, enemyVerticalPos, hPosInstructionAdr, vPosInstructionAdr)
+
+        # RETURN PATCHLIST FROM THIS    
+        patchList += patch_enemy_pos_instructions(
+                enemyHorizontalPos, 
+                enemyVerticalPos, 
+                hPosInstructionAdr, 
+                vPosInstructionAdr
+        )
 
     else:
+        # Only Enemy Position
         enemyPositionBuffer = bytearray()
         enemyPositionBuffer += enemyHorizontalPos
         enemyPositionBuffer += enemyVerticalPos
 
-        rom.seek(stageInfo.baseEnemyPosRomAdr)
-        rom.write(enemyPositionBuffer)
+        #rom.seek(stageInfo.baseEnemyPosRomAdr)
+        #rom.write(enemyPositionBuffer)
+        patchList.append(
+            Patch(
+                stageInfo.baseEnemyPosRomAdr, 
+                enemyPositionBuffer
+            )
+        )
 
     # Energy Buffer
     energyBuffer = bytes()
@@ -297,7 +403,9 @@ def patch_stage(romPath, stageInfo, stageConfig, stageData):
     energyBuffer += int_to_16_le(stageConfig.enemyEnergyMax)
 
     # Player/Enemy Energy
-    rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset)
-    rom.write(energyBuffer)
+    #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset)
+    energyOffsetAdr = stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset
+    #rom.write(energyBuffer)
+    patchList.append(Patch(energyOffsetAdr, energyBuffer))
 
-    rom.close()
+    return patchList
