@@ -15,7 +15,6 @@ Tools for hacking, editing, and randomizing Super Godzilla for the SNES, includi
  + Install the perlin_noise module:
 ```
 pip install perlin_noise
-pip install tk
 ```
 
 ## Installation and Execution
