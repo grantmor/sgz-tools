@@ -42,11 +42,12 @@ nese=true: NoEnemySpawnEvent
 nmgw=true: NoMechaGodzillaWarp
 nsc=true: NoStartingContinues
 nac=true: NoAddedContinues
+out=stdout
 ```
 
 Example:
 
 ```
 # Noob settings
-python randomizerCli.py tl=512 nsc=false nac=false
+python randomizerCli.py tl=512 nsc=false nac=false out=noob.ips
 ```
