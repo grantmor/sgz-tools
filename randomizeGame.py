@@ -273,7 +273,7 @@ def patch_super_bank():
     return  superBank, patchList
 
 
-def randomize_game(gameVersion, randomizerFlags):
+def randomize_game(gameVersion, randomizerFlags, output):
     patchList = []
 
     # Randomizer Flags (arguments later)
@@ -283,9 +283,6 @@ def randomize_game(gameVersion, randomizerFlags):
         gameVersion,
         randomizerFlags
     )
-
-    # Debug
-    print(f'patchList after features:{patchList}')
 
     if randomizerFlags.RandomizeMaps:
         # Standard Palettes
@@ -402,11 +399,20 @@ def randomize_game(gameVersion, randomizerFlags):
                 if eventMapDataOk and enemyMapDataOk: break
 
             patchList += patch_stage(gameVersion, stageInfo, stageConfig, stageData)
-    
-    write_ips_file('SuperGodzillaRandomizerPatch.ips', patchList) 
+
+    blob = build_ips_blob(patchList)
+
+    print(output)
+
+    if output =='stdout':
+        sys.stdout.buffer.write(blob)
+    else:
+        ipsFile = open(output, 'w+b')
+        ipsFile.write(blob)
+        ipsFile.close()
 
 
-def write_ips_file(fileName, patchList):
+def build_ips_blob(patchList):
     ipsData = bytearray()
 
     magicNo = bytes([0x50, 0x41, 0x54, 0x43, 0x48])
@@ -417,6 +423,7 @@ def write_ips_file(fileName, patchList):
     for patch in patchList:
         ipsData += patch.address.to_bytes(3, 'big')
 
+        # Annoyingly, bytearrays seem to dislike only holding one byte?
         if type(patch.data) == int:
             dataSize = 1
         else:
@@ -431,6 +438,4 @@ def write_ips_file(fileName, patchList):
 
     ipsData += endOfFile
 
-    ipsFile = open(fileName, 'w+b')
-    ipsFile.write(ipsData)
-    ipsFile.close()
+    return ipsData
