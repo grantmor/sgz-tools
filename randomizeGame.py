@@ -398,11 +398,9 @@ def randomize_game(gameVersion, randomizerFlags, output):
 
                 if eventMapDataOk and enemyMapDataOk: break
 
-            patchList += patch_stage(gameVersion, stageInfo, stageConfig, stageData)
+            patchList += patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
 
     blob = build_ips_blob(patchList)
-
-    print(output)
 
     if output =='stdout':
         sys.stdout.buffer.write(blob)
