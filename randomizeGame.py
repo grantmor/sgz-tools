@@ -24,11 +24,11 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     maxCoordY = maxRowsInStage - playableRows
 
     if stageInfo.stageNumber == 1:
-        mapParams = MapParameters(2, 8, 4, 2, 0, 24, 1)
+        mapParams = MapParameters(2, 8, 4, 2, 0, 16, 1)
     elif stageInfo.stageNumber == 2:
-        mapParams = MapParameters(2, 8, 4, 2, 0, 24, 1)
+        mapParams = MapParameters(2, 8, 4, 2, 0, 16, 1)
     elif stageInfo.stageNumber == 3:
-        mapParams = MapParameters(2, 10, 8, 3, 6, 48, 1)
+        mapParams = MapParameters(2, 10, 8, 3, 6, 24, 1)
     elif stageInfo.stageNumber == 4: 
         mapParams = MapParameters(2, 12, 10, 4, 0, 48, 1)
     elif stageInfo.stageNumber == 5: 
