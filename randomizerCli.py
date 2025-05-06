@@ -4,7 +4,7 @@ from randomizeGame import *
 
 
 def arg_to_bool(value):
-    argValue = None
+    #argValue = None
     argLower = value.lower()
 
     if argLower == 'true':
@@ -26,6 +26,8 @@ def process_args():
     randomizeMaps = True
     persistentEnergy = True
     persistentTime = True
+    #
+    persistentInventory = True
     noEnemySpawnCritical = True
     noEnemySpawnEvent = True
     noMechaGodzillaWarp = True
@@ -49,6 +51,8 @@ def process_args():
             persistentEnergy = arg_to_bool(value)
         elif param == 'pt':
             persistentTime = arg_to_bool(value)
+        elif param == 'pi':
+            persistentInventory = arg_to_bool(value)
         elif param == 'nesc':
             noEnemySpawnCritical = arg_to_bool(value)
         elif param == 'nese':
@@ -69,6 +73,7 @@ def process_args():
         randomizeMaps,
         persistentEnergy,
         persistentTime,
+        persistentInventory,
         noEnemySpawnCritical,
         noEnemySpawnEvent,
         noMechaGodzillaWarp,
@@ -76,6 +81,7 @@ def process_args():
         noAddedContinues
     )
 
+    print(randomizerFlags)
     randomize_game('us11', randomizerFlags, output)
 
 process_args()

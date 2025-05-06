@@ -17,6 +17,8 @@ class Opcodes:
     CmpAbs = 0xcd
 
     BneRel = 0xd0
+    
+    Nop = 0xea
 
 opcodes = Opcodes()
 
@@ -26,6 +28,7 @@ class RandomizerFlags:
     RandomizeMaps: bool
     PersistentEnergy: bool
     PersistentTime: bool
+    PersistentInventory: bool
     NoEnemySpawnCritical: bool
     NoEnemySpawnEvent: bool
     NoMechaGodzillaWarp: bool
@@ -43,6 +46,7 @@ class Game:
 
     NoMechaGodzillaWarpPatchRomAdr: int = 0x00c6df
 
+    # Might be a bug here or elsewhere, looks like this is getting written to one byte later
     # Note: all operands to 65c816 instructions are little-endian
     PersistentTimeCode = bytearray([
         opcodes.JmpAbs, 0x8b, 0xf5,
@@ -107,8 +111,6 @@ class Game:
         opcodes.JmpAbs, 0xcf, 0xd0
     ])
     
-
-
     NoWarpCode = bytearray([
         opcodes.JmpAbs,
         0x32,
@@ -123,18 +125,30 @@ class Game:
         opcodes.LdyImeLong, 0x00, 0x00
     ])
 
+    PersistentInventory = bytearray([
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop,
+        opcodes.Nop
+    ])
+
 game = Game()
 
 
 def patch_features(gameVersion, randomizerFlags):
     patchList = []
-    #rom = open(romPath, 'r+b')
 
     # Patch Persistent Time
     if randomizerFlags.PersistentTime:
         # Jump to Time Sub
-        #rom.seek(game.PersistentTimePatchRomAdr)
-        #rom.write(game.PersistentTimeCode)
         patchList.append(
             Patch(
                 game.PersistentTimePatchRomAdr, 
@@ -151,9 +165,6 @@ def patch_features(gameVersion, randomizerFlags):
         game.PersistentTimeSub[timeHiByteOperandOffset] = timeBytes[1]
 
         # Time Sub
-        #rom.seek(0xf58b)
-        #rom.write(game.PersistentTimeSub)
-
         patchList.append(
             Patch(
                 0xf58b, 
@@ -164,8 +175,6 @@ def patch_features(gameVersion, randomizerFlags):
     # Patch Persistent Energy
     if randomizerFlags.PersistentEnergy:
         # Jump to Energy Sub
-        #rom.seek(game.PersistentEnergyPatchRomAdr)
-        #rom.write(game.PersistentEnergyCode)
         patchList.append(
             Patch(
                 game.PersistentEnergyPatchRomAdr, 
@@ -174,16 +183,12 @@ def patch_features(gameVersion, randomizerFlags):
         )
 
         # Energy Sub
-        #rom.seek(0xf5b4)
-        #rom.write(game.PersistentEnergySub)
         patchList.append(
             Patch(0xf5b4, game.PersistentEnergySub)
         )
 
     # Patch No Warp
     if randomizerFlags.NoMechaGodzillaWarp:
-        #rom.seek(game.NoMechaGodzillaWarpPatchRomAdr)
-        #rom.write(game.NoWarpCode)
         patchList.append(
             Patch(
                 game.NoMechaGodzillaWarpPatchRomAdr,
@@ -193,8 +198,6 @@ def patch_features(gameVersion, randomizerFlags):
 
     # Patch No Starting Continues
     if randomizerFlags.NoStartingContinues:
-        #rom.seek(0x1024)
-        #rom.write(game.NoStartContinueInstruction)
         patchList.append(
             Patch(
                 0x1024,
@@ -204,8 +207,6 @@ def patch_features(gameVersion, randomizerFlags):
 
     # Patch No Added Continues
     if randomizerFlags.NoAddedContinues:
-        #rom.seek(0x3e52)
-        #rom.write(game.NoAddedContinueInstruction)
         patchList.append(
             Patch(
                 0x3e52,
@@ -213,13 +214,21 @@ def patch_features(gameVersion, randomizerFlags):
             )
         )
 
-        #rom.seek(0x3e5d)
-        #rom.write(game.NoAddedContinueInstruction)
         patchList.append(
             Patch(
                 0x3e5d,
                 game.NoAddedContinueInstruction
             )
         )
+    
+    # Patch Persistent Inventory
+    if randomizerFlags.PersistentInventory:
+        patchList.append(
+            Patch(
+                0xcd67,
+                game.PersistentInventory
+            )
+        )
+
 
     return patchList

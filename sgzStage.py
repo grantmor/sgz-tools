@@ -210,14 +210,11 @@ def patch_enemy_pos_instructions(hPos, vPos, hAdr, vAdr):
     return patchList
 
 
-def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags):
+def patch_stage(gameVersion, stageInfo, stageConfig, stageData, mufoSteps, randomizerFlags):
     patchList = []
 
     if randomizerFlags.RandomizeMaps:
         # Write Stage Terrain Region Pointers
-        #rom.seek(stageInfo.mapPtrOffsetA)
-        #print(f'Stage mapPtrA:{stageData.mapPtrA}')
-        #rom.write(stageData.mapPtrA)
 
         patchList.append(
             Patch(
@@ -226,9 +223,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
             )
         )
 
-        #rom.seek(stageInfo.mapPtrOffsetB)
-        #print(f'Stage mapPtrB:{stageData.mapPtrB}')
-        #rom.write(stageData.mapPtrB)
         patchList.append(
             Patch(
                 stageInfo.mapPtrOffsetB, 
@@ -237,8 +231,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
         )
         
         # Write Stage Map Data
-        #rom.seek(stageInfo.terrainOffset)
-        #rom.write(stageData.mapData)
         patchList.append(
             Patch(
                 stageInfo.terrainOffset, 
@@ -247,8 +239,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
         )
 
         # Write Stage Enemy Region Pointers
-        #rom.seek(stageInfo.enemyPtrOffsetA)
-        #rom.write(stageData.enemyPtrA)
         patchList.append(
             Patch(
                 stageInfo.enemyPtrOffsetA, 
@@ -256,8 +246,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
             )
         )
 
-        #rom.seek(stageInfo.enemyPtrOffsetB)
-        #rom.write(stageData.enemyPtrB)
         patchList.append(
             Patch(
                 stageInfo.enemyPtrOffsetB, 
@@ -266,8 +254,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
         )
 
         # Write Stage Enemy Data
-        #rom.seek(stageInfo.enemyOffset)
-        #rom.write(stageData.enemyData)
         patchList.append(
             Patch(
                 stageInfo.enemyOffset, 
@@ -275,9 +261,21 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
             )
         )
 
+        # Write Stage MUFO Positions
+        if 1 < stageInfo.stageNumber < 6:
+            print(stageInfo.stageNumber)
+            print(mufoSteps)
+            mufoBuffer = bytes()
+            mufoBuffer += int_to_16_le(mufoSteps[0])
+            mufoBuffer += int_to_16_le(mufoSteps[1])
+            patchList.append(
+                Patch(
+                    stageInfo.mufoPtr,
+                    mufoBuffer
+                )
+            )
+
         # Write Stage Event Data
-        #rom.seek(stageInfo.eventOffset)
-        #rom.write(stageData.eventData)
         patchList.append(
             Patch(
                 stageInfo.eventOffset, 
@@ -286,11 +284,9 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
         )
 
         # Time
-        #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.stageTimeOffset)
         timeOffset = stageInfo.baseStatInitRomAdr + stageInfo.stageTimeOffset
         time = int_to_16_le(stageConfig.stageTime)
 
-        #rom.write(time)
         patchList.append(
             Patch(
                 timeOffset,
@@ -303,10 +299,8 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
         playerPositionBuffer += int_to_16_le(stageConfig.playerPosX)
         playerPositionBuffer += bytes([stageConfig.playerPosY])
 
-        #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset)
         playerPositionAdr = stageInfo.baseStatInitRomAdr + stageInfo.horizontalPosOffset
 
-        #rom.write(playerPositionBuffer)
         patchList.append(
             Patch(
                 playerPositionAdr, 
@@ -319,8 +313,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
         warpDataBuffer += int_to_16_le(stageConfig.warpX) 
         warpDataBuffer += int_to_16_le(stageConfig.warpY)
 
-        #rom.seek(stageInfo.warpTableRomAdr)
-        #rom.write(warpDataBuffer)
         patchList.append(
             Patch(
                 stageInfo.warpTableRomAdr, 
@@ -342,8 +334,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
             enemyPositionBuffer += enemyVerticalPos
             enemyPositionBuffer += bytes([0x03]) # Need to debug more to determine what the last byte is used for
 
-            #rom.seek(stageInfo.baseEnemyPosRomAdr)
-            #rom.write(enemyPositionBuffer)
             patchList.append(
                 Patch(
                     stageInfo.baseEnemyPosRomAdr, 
@@ -358,8 +348,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
             enemyPositionBuffer += enemyHorizontalPos
             enemyPositionBuffer += enemyVerticalPos
 
-            #rom.seek(stageInfo.baseEnemyPosRomAdr)
-            #rom.write(enemyPositionBuffer)
             patchList.append(
                 Patch(
                     stageInfo.baseEnemyPosRomAdr, 
@@ -388,8 +376,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
             enemyPositionBuffer += enemyHorizontalPos
             enemyPositionBuffer += enemyVerticalPos
 
-            #rom.seek(stageInfo.baseEnemyPosRomAdr)
-            #rom.write(enemyPositionBuffer)
             patchList.append(
                 Patch(
                     stageInfo.baseEnemyPosRomAdr, 
@@ -405,9 +391,9 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
     energyBuffer += int_to_16_le(stageConfig.enemyEnergyMax)
 
     # Player/Enemy Energy
-    #rom.seek(stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset)
     energyOffsetAdr = stageInfo.baseStatInitRomAdr + stageInfo.startEnergyOffset
-    #rom.write(energyBuffer)
-    patchList.append(Patch(energyOffsetAdr, energyBuffer))
+
+    # TODO: The below is commented out because it overwrote the mothership positions, there's probably a bug here
+    #patchList.append(Patch(energyOffsetAdr, energyBuffer))
 
     return patchList

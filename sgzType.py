@@ -85,6 +85,8 @@ class Stage:
 
                 self.baseEnemyPosRomAdr = 0xceb3  
                 self.baseStatInitRomAdr = 0xd1c4
+
+                self.mufoPtr = 0xd1e8
                 
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
@@ -125,6 +127,8 @@ class Stage:
                 self.baseEnemyPosRomAdr = 0xd216 
                 self.baseStatInitRomAdr = 0xd1f8
                 
+                self.mufoPtr = 0xd21a
+
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
 
@@ -165,6 +169,8 @@ class Stage:
                 self.baseEnemyPosRomAdr = 0xd248  # Only Battra 1
                 self.baseStatInitRomAdr = 0xd22a
                 
+                self.mufoPtr = 0xd24c
+
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
 
@@ -205,6 +211,8 @@ class Stage:
                 self.baseEnemyPosRomAdr = 0xd27a 
                 self.baseStatInitRomAdr = 0xd25c
                 
+                self.mufoPtr = 0xd27e
+
                 self.stageTimeOffset = 0x00
                 self.startEnergyOffset = 0x26
 

@@ -42,24 +42,31 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     eventList = []
 
-    # Mothership
-    mothershipOffsets = {
-        2 : coord_to_map_offset_only_terrain_no_split(31, 5),
-        3 : coord_to_map_offset_only_terrain_no_split(9, 21),
-        4 : coord_to_map_offset_only_terrain_no_split(38, 28),
-        5 : coord_to_map_offset_only_terrain_no_split(2, 30)
-    }
+    print(f"stage number: {stageInfo.stageNumber}")
+    print(f"maxCoordY: {maxCoordY}")
 
-    #for val in mothershipOffsets.values():
-    #    print(f'mufoOffset: {val}')
+    mufoCoords = [random.randint(0, engine.TilesInRow * 2 - engine.StepsInTile), random.randint(maxCoordY, 31)]
+
+    print("")
+
+    if stageInfo.stageNumber == 2:
+        mufoOffset = coord_to_map_offset_only_terrain_no_split(mufoCoords[0], mufoCoords[1] - engine.StepsInTile * 2)
+    elif stageInfo.stageNumber == 3:
+        mufoOffset = coord_to_map_offset_only_terrain_no_split(mufoCoords[0], mufoCoords[1] - engine.StepsInTile)
+    elif 1 < stageInfo.stageNumber < 6:
+        mufoOffset = coord_to_map_offset_only_terrain_no_split(mufoCoords[0], mufoCoords[1])
+    else: 
+        mufoOffset = None
+
+
+    mufoSteps = [mufoCoords[0] * engine.StepsInTile, mufoCoords[1] * engine.StepsInTile]
 
     criticalTiles = {}
 
     # Choose a more appropriate tile later
     baseTerrainType = tiles.SpecialGround
 
-    for val in mothershipOffsets.values():
-        criticalTiles[val] = True
+    criticalTiles[mufoOffset] = True
 
     if stageInfo.stageNumber == 5:
         superBankEvent = Event(events.Trap, 0x00, superBank.xPos, superBank.yPos, baseTerrainType, True)
@@ -69,39 +76,23 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     # Items
     itemTiles, itemEvents = generate_events(events.Item, mapParams.numItems, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(itemTiles)
-    #print(f'criticalTiles after Items: {criticalTiles}')
 
     # Resupplies
     resupplyTiles, resupplyEvents = generate_events(events.EnergyResupply, mapParams.numResupplies, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(resupplyTiles)
-    #print(f'criticalTiles after Resupplies: {criticalTiles}')
 
     # Traps
     trapTiles, trapEvents = generate_events(events.Trap, mapParams.numTraps, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(trapTiles)
-    #print(f'criticalTiles after Traps: {criticalTiles}')
 
     # Warp
     warpTiles, warpEvents = generate_events('warp', mapParams.numWarps, criticalTiles, maxCoordY, baseTerrainType, stageInfo.tilesInMap)
     criticalTiles.update(warpTiles)
-    #print(f'criticalTiles after Warps: {criticalTiles}')
 
     eventList = itemEvents + resupplyEvents + trapEvents + warpEvents
 
     if stageInfo.stageNumber == 5:
         eventList.append(superBankEvent)
-
-
-    # Log Events
-    #print()
-    #print(f'Stage {stageInfo.stageNumber}')
-    #for event in eventList:
-    #    print()
-    #    print(f'event.type:{event.type}')
-    #    print(f'event.payload:{event.payload}')
-    #    print(f'event.col:{event.col}')
-    #    print(f'event.row:{event.row}')
-
 
     # Generating Random Terrain Data
     noise1 = PerlinNoise(seed=random.randint(0, 0xffffffffffffffff), octaves=mapParams.noiseFrequency)
@@ -160,12 +151,9 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     
 
     # Add Mothership Tile    
-    # 2 doesn't work for some reason?
-    if 2 < stageInfo.stageNumber < 6:
-        mufoOffset = mothershipOffsets[stageInfo.stageNumber]
+    if 1 < stageInfo.stageNumber < 6:
         randomMap[mufoOffset] = tiles.Mothership
         
-    #print(f'randomMap:{randomMap}')
     ### TODO: - Place more "obstacles" (skyscraper, rocky mountain, electric fence)
 
     # Tiles that can't be moved through (player or boss shouldn't spawn here)
@@ -180,11 +168,8 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
             #print()
             inaccessibleTiles.append(pad_offset(tileIdx, stageInfo.tilesInMap))
 
-    #print(f'inaccesibleTiles:{inaccessibleTiles}')
-
     # Placing enemies - do this more efficiently later -
     # Generate list of required positions first, then assign positions
-
     
     enemyTypes = [
         enemies.Tank,
@@ -194,7 +179,6 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     enemyList = []
 
-    #print(f'randomizerFlags.noEnemySpawnEvent:{randomizerFlags.NoEnemySpawnEvent}')
     for enemyType in enemyTypes:
         for enemy in range(0, mapParams.numEnemies // len(enemyTypes)):
             while True:
@@ -202,23 +186,13 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
                 yPos = random.randint(maxCoordY, 31)
 
                 if not randomizerFlags.NoEnemySpawnEvent: break
-                #print(f'xPos, YPos: {xPos},{yPos}') 
-                #print(f'Offset: {coord_to_map_offset_only_terrain_no_split(xPos, yPos, stageInfo.tilesInMap)}')
-                #print(f'criticalTiles: {criticalTiles}')
                 if not (pad_offset(coord_to_map_offset_only_terrain_no_split(xPos, yPos), stageInfo.tilesInMap) in criticalTiles): break
 
             enemyList.append(EnemyUnit(enemyType, xPos, yPos))
     
-    #print(f'EnemyList: {enemyList}')
-    
-    # Log enemy offsets
-    #for enemy in enemyList:
-    #    print(coord_to_map_offset(enemy.col, enemy.row, False))
-
-    #print(f'Final inaccessibleTiles list:{inaccessibleTiles}')
     stageConfig = stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY)
 
-    return eventList, randomMap, enemyList, stageConfig
+    return eventList, randomMap, enemyList, mufoSteps, stageConfig
 
 
 # patches in super energy bank tile coordinates and returns super bank coords for generate_stage() for stage 5
@@ -252,8 +226,6 @@ def patch_super_bank():
     bankXPosInstruction = bytes([ldx]) + int_to_16_le(xSuperBankBytes)
     bankYPosInstruction = bytes([ldy]) + int_to_16_le(ySuperBankBytes)
 
-    #fileObj.seek(xAdr)
-    #fileObj.write(bankXPosInstruction)
     patchList.append(
         Patch(
             xAdr,
@@ -261,8 +233,6 @@ def patch_super_bank():
         )
     )
 
-    #fileObj.seek(yAdr)
-    #fileObj.write(bankYPosInstruction)
     patchList.append(
         Patch(
             yAdr,
@@ -339,8 +309,6 @@ def randomize_game(gameVersion, randomizerFlags, output):
         # Handling Stage 6 Manually for now
         # MUST BE DONE BEFORE PATCHING OTHER STAGES TO GET SUPER BANK POSITION
 
-        #rom = open(filePath, 'r+b')
-
         # Randomize Bagan's Location
         enemyHorizontalPos = int_to_16_le(random.randint(0, 0xff))
         enemyVerticalPos = int_to_16_le(random.randint(0, 0xff))
@@ -371,9 +339,7 @@ def randomize_game(gameVersion, randomizerFlags, output):
             mapsGenerated = 0
             while True:
                 mapsGenerated += 1
-                eventList, randomMap, enemyList, stageConfig = generate_stage(stageInfo, randomizerFlags, superBank, stdPalettes)
-
-                #print_uncompressed_map_data(randomMap)
+                eventList, randomMap, enemyList, mufoSteps, stageConfig = generate_stage(stageInfo, randomizerFlags, superBank, stdPalettes)
 
                 stageData = pack_stage(
                     stageInfo, 
@@ -384,21 +350,12 @@ def randomize_game(gameVersion, randomizerFlags, output):
                     True
                 )
 
-                #print()
-                #print(f'Stage: {stageInfo.stageNumber}')
-                #print(f'curMapDataSize: {len(stageData.mapData)}')
-                #print(f'Max map size for this stage: {stageInfo.terrainSize}')
-                #print(f'curEnemyDataSize: {len(stageData.enemyData)}')
-                #print(f'Max enemy size for this stage: {stageInfo.enemySize}')
-                #print(f'Maps generated: {mapsGenerated}')
-                #print()
-
                 eventMapDataOk = (len(stageData.mapData) <= stageInfo.terrainSize)
                 enemyMapDataOk = (len(stageData.enemyData) <= stageInfo.enemySize)
 
                 if eventMapDataOk and enemyMapDataOk: break
 
-            patchList += patch_stage(gameVersion, stageInfo, stageConfig, stageData, randomizerFlags)
+            patchList += patch_stage(gameVersion, stageInfo, stageConfig, stageData, mufoSteps, randomizerFlags)
 
     blob = build_ips_blob(patchList)
 

@@ -98,6 +98,8 @@ class Engine:
     TilesInRow = 20
     RegionsInZone = 2
 
+    StepsInTile = 8
+
     SameTile = 0x00
     NewTile = 0x01
 
