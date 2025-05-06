@@ -23,11 +23,6 @@ git clone https://github.com/grantmor/sgz-tools.git
 cd sgz-tools
 python ./randomizerCli.py
 ```
-NOTE: If you receive an error message similar to:
-```
-ImportError: cannot import name 'Iterable' from 'collections' (<filename>)
-```
-This issue can be worked around by changing the import line in the perlin_noise.py file you installed earlier to refer to 'collections.abc' instead of 'collections'
 
 ## Command Line Arguments
 Please note that all randomizer flags are currently ENABLED by default.
@@ -37,6 +32,7 @@ tl=768: TimeLimit
 rm=true: RandomizeMaps
 pe=true: PersistentEnergy
 pt=true: PersistentTime
+pi=true: PersistentInventory
 nesc=true: NoEnemySpawnCritical
 nese=true: NoEnemySpawnEvent
 nmgw=true: NoMechaGodzillaWarp
