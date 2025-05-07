@@ -44,6 +44,9 @@ out=stdout
 Example:
 
 ```
+# Recommended Settings
+python randomizerCli.py
+
 # Noob settings
 python randomizerCli.py tl=512 nsc=false nac=false out=noob.ips
 ```
