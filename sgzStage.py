@@ -36,8 +36,6 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
 
         playerOffset = coord_to_map_offset_only_terrain_no_split(playerX, playerY) 
 
-        #print(f'playerOffset:{playerOffset}')
-
         if not (playerOffset in inaccessibleTiles): break
 
     while True:
@@ -67,9 +65,6 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
         firstPosOk = not (firstPosOffset in inaccessibleTiles)
         secondPosOk = not (secondPosOffset in inaccessibleTiles)
 
-        #print(f'firstEnemyPosOffset: {firstPosOffset}')
-        #print(f'secondEnemyPosOffset: {secondPosOffset}')
-
         if stageInfo.stageNumber != 4: secondPosOk = True
         if firstPosOk and secondPosOk: break
     
@@ -81,7 +76,6 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
         warpStepsY = coord_to_steps(warpY)
 
         warpToPosOffset = coord_to_map_offset_only_terrain_no_split(warpX, warpY)
-        #print(f'warpToPosOffset:{warpToPosOffset}')
 
         if not (warpToPosOffset in inaccessibleTiles) : break
 
@@ -111,25 +105,10 @@ def stage_config(stageInfo, randomizerFlags, inaccessibleTiles, maxCoordY):
 
 def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPresent):
 
-    #print(f'\n\n\n*** Stage  {stage.stageNumber} ***\n')
-    #print(f'\nmap before pad:')
-    #print_uncompressed_map_data(mapInput, False)
-
     padTile = tiles.RockyMountain if stage.stageNumber in [2,3] else tiles.SkyScraper
     mapData = pad_map(mapInput, padTile)
-    
-    #print(f'\nmap after pad')
-    #print_uncompressed_map_data(mapData, False)
-    #print(f'len after padding:{len(mapData)}')
     mapData = split_map_by_region(mapData)
-
-    #print(f'\nmap after split')
-    #print_uncompressed_map_data(mapData, False)
-
     mapData = insert_palettes(mapData, stdPalettes)
-
-    #print(f'\nmap after palette insertion ')
-    #print_uncompressed_map_data(mapData, True)
 
     eventData = bytearray()
     # Eventually, put in "standard events?"
@@ -153,7 +132,6 @@ def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPre
 
     # Compress Terrain Data
     bRegionTerrainOffset, compressedMapData = compress_map_data(mapEventData, stdPalettes, True)
-    #print(f'bRegionTerrainOffset:{bRegionTerrainOffset}')
     # Compress Enemy Data - Unfortunately, this mutates mapData - will need to figure out how to deep copy later...
     mapEnemyData = merge_enemy_list_map_data(mapEventData, enemyInput, palettesPresent, stdPalettes) 
     bRegionEnemyOffset, compressedEnemyData  = compress_map_data(mapEnemyData, stdPalettes, True)
@@ -162,15 +140,9 @@ def pack_stage(stage, eventInput, mapInput, enemyInput, stdPalettes, palettesPre
     aRegionPointer = stage.mapBasePtr
     bRegionPointer = aRegionPointer + bRegionTerrainOffset
 
-    #print(f'aRegionPointer: {aRegionPointer}')
-    #print(f'bRegionPointer: {bRegionPointer}')
-
     # Compute pointers to enemy data
     aRegionEnemyPointer = stage.enemyBasePtrVal
     bRegionEnemyPointer = aRegionEnemyPointer + bRegionEnemyOffset
-
-    #print(f'aRegionEnemyPointer: {aRegionEnemyPointer}')
-    #print(f'bRegionEnemyPointer: {bRegionEnemyPointer}')
 
     data = StageData(
         eventData, 
@@ -263,8 +235,6 @@ def patch_stage(gameVersion, stageInfo, stageConfig, stageData, mufoSteps, rando
 
         # Write Stage MUFO Positions
         if 1 < stageInfo.stageNumber < 6:
-            print(stageInfo.stageNumber)
-            print(mufoSteps)
             mufoBuffer = bytes()
             mufoBuffer += int_to_16_le(mufoSteps[0])
             mufoBuffer += int_to_16_le(mufoSteps[1])

@@ -81,7 +81,6 @@ def process_args():
         noAddedContinues
     )
 
-    print(randomizerFlags)
     randomize_game('us11', randomizerFlags, output)
 
 process_args()

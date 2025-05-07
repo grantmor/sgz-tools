@@ -1,5 +1,7 @@
 import sys
 import random
+import datetime as dt
+from pathlib import Path
 
 from perlin_noise import *
 
@@ -42,12 +44,7 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
 
     eventList = []
 
-    print(f"stage number: {stageInfo.stageNumber}")
-    print(f"maxCoordY: {maxCoordY}")
-
     mufoCoords = [random.randint(0, engine.TilesInRow * 2 - engine.StepsInTile), random.randint(maxCoordY, 31)]
-
-    print("")
 
     if stageInfo.stageNumber == 2:
         mufoOffset = coord_to_map_offset_only_terrain_no_split(mufoCoords[0], mufoCoords[1] - engine.StepsInTile * 2)
@@ -163,9 +160,6 @@ def generate_stage(stageInfo, randomizerFlags, superBank, stagePalettes):
     for tileIdx, tile in enumerate(randomMap):
         
         if tile in [tiles.SkyScraper, tiles.RockyMountain]:
-            #print(f'iaccessible: tile: {tile}')
-            #print(f'iaccessible: tileIdx: {tileIdx}')
-            #print()
             inaccessibleTiles.append(pad_offset(tileIdx, stageInfo.tilesInMap))
 
     # Placing enemies - do this more efficiently later -
@@ -359,12 +353,18 @@ def randomize_game(gameVersion, randomizerFlags, output):
 
     blob = build_ips_blob(patchList)
 
+    
     if output =='stdout':
         sys.stdout.buffer.write(blob)
-    else:
-        ipsFile = open(output, 'w+b')
-        ipsFile.write(blob)
-        ipsFile.close()
+        Path('./patchfiles').mkdir(parents=True, exist_ok=True)
+
+        output = './patchfiles/' + dt.datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + '_' + output
+
+    output = dt.datetime.now().strftime("%Y-%m-%d_%H:%M:%S") + '_' + output
+
+    ipsFile = open(output, 'w+b')
+    ipsFile.write(blob)
+    ipsFile.close()
 
 
 def build_ips_blob(patchList):
